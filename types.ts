@@ -1,3 +1,5 @@
+import { QueryResponse } from "@rockset/client/dist/codegen/api";
+
 export interface googleUser {
     iss: string,
     aud: string,
@@ -10,3 +12,5 @@ export interface googleUser {
     given_name?: string,
     family_name?: string,
 }
+
+export type QueryCallback = (value: QueryResponse) => void
