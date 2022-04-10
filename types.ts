@@ -13,4 +13,13 @@ export interface googleUser {
     family_name?: string,
 }
 
+export interface User {
+    _id: number,
+    email: string,
+    name: string,
+    picture: string,
+    given_name: string,
+    family_name: string,
+    _event_time:string
+}
 export type QueryCallback = (value: QueryResponse) => void
