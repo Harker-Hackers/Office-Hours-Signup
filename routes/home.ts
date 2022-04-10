@@ -16,7 +16,7 @@ router.get("/", (req, res) => {
     res.render("home.ejs");
 });
 
-router.post("/login", async (req, res) => {
+router.post("/", async (req, res) => {
     let googleUser = await getGoogleUser(req.body.credential).catch(() => {
         showError(res, 500);
         res.end();
