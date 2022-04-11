@@ -1,4 +1,5 @@
 {
     "googleClientId": "",
-    "rocksetApiKey": ""
+    "rocksetApiKey": "",
+    "jwtKey":""
 }
