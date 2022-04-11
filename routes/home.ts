@@ -1,11 +1,13 @@
 import express from "express";
-import { googleUser } from "../types";
+import { googleUser, Slot } from "../types";
 import { grabUserByEmail, login, teacherOnly, studentOnly } from "../util/authorizationHandler";
 import getGoogleUser from '../util/getGoogleUser';
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
 import { createStudent } from "../util/student";
 import { isTeacher, isStudent } from "../util/userHandler";
+import { DateSlotQuery, TeacherSlotQuery, getSlots, createSlot, deleteSlot } from "../util/slots";
+import { User } from "@rockset/client/dist/codegen/api";
 
 let router = express.Router();
 
@@ -61,11 +63,11 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
-    res.render("teacher/home.ejs",req.user.data);
+    res.render("teacher/home.ejs",req.user);
 });
 
 router.get("/student",studentOnly,async (req:any,res)=>{
-    res.render("student/home.ejs",req.user.data);
+    res.render("student/home.ejs",req.user);
 });
 
 export default router;
