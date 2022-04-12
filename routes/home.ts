@@ -63,7 +63,6 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
-    console.log(await getSlots(new SlotQuery.TimeRangeSlotQuery("03:11:20","03:12:09")));
     res.render("teacher/home.ejs",req.user);
 });
 
