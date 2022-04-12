@@ -77,6 +77,7 @@ class MySlotQuery {
     }
     get()
     {
+        console.log("select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query));
         return new Promise<QueryResponse>((resolve,reject)=>{
             query({
                 query: "select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query),
@@ -111,7 +112,7 @@ export class DateSlotQuery extends MySlotQuery
                 value:date
             }])
         else
-            super(`where date = :date`,
+            super(`date = :date`,
             [{
                 name:"date",
                 type:"string",
@@ -119,6 +120,30 @@ export class DateSlotQuery extends MySlotQuery
             }])
     }
 }
+
+export class TimeRangeSlotQuery extends MySlotQuery
+{
+    constructor(mintime:string|Date,maxtime:string|Date)
+    {
+        if(!(typeof(mintime)=="string"))
+            mintime=toSQLTime(mintime);
+        if(!(typeof(maxtime)=="string"))
+            maxtime=toSQLTime(maxtime);
+        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime`,
+        [{
+            name:"mintime",
+            type:"time",
+            value:mintime
+        },{
+            name:"maxtime",
+            type:"time",
+            value:maxtime
+        }])
+    }
+}
+
+export const SlotQuery = { TimeRangeSlotQuery, DateSlotQuery, TeacherSlotQuery }
+
 /**
  * Used to get slots based on queries
  * Sample Usage:
