@@ -56,9 +56,9 @@ router.post("/", async (req, res) => {
         login(req,res,user);
         res.redirect("/student");
     } else if (googleUser.email?.endsWith("@staff.harker.org")) {
-        res.render("home.ejs", {error: "Please use your @harker.org email."})
+        res.render("home.ejs", {error: "Please use your @harker.org email."});
     } else {
-        res.render("home.ejs", {error: "Please signin with your <b>Harker</b> email."})
+        res.render("home.ejs", {error: "Please signin with your <b>Harker</b> email."});
     }
 });
 
