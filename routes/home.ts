@@ -7,7 +7,6 @@ import { createTeacher } from "../util/teacher";
 import { createStudent } from "../util/student";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { SlotQuery, getSlots, createSlot, deleteSlot } from "../util/slots";
-import { User } from "@rockset/client/dist/codegen/api";
 
 let router = express.Router();
 
@@ -63,7 +62,6 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
-    console.log(await getSlots(new SlotQuery.TimeRangeSlotQuery("03:11:20","03:12:09")));
     res.render("teacher/home.ejs",req.user);
 });
 
