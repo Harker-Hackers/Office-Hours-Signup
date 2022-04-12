@@ -5,7 +5,7 @@ import homeRouter from "./routes/home";
 
 let app = express();
 app.set("view engine", "ejs");
-
+app.use(require("cookie-parser")());
 app.use("/", homeRouter);
 
 app.listen(process.env.PORT ?? 3000, () => console.log("App running"));

@@ -1,13 +1,12 @@
 <%- include(`${base}/views/partials/head.ejs`) %>
+<%- include(`${base}/views/partials/calendar.ejs`) %>
 <body>
     <h1>Teacher Home</h1>
     <p>Welcome, <%- name %></p>
 
     <h2>Create a new slot</h1>
-    <input type="date" id="start-time" value="2018-07-22" min="2018-01-01" max="2018-12-31"> -
-    <input type="date" id="end-time" value="2018-07-22" min="2018-01-01" max="2018-12-31">
-
-    <script>
-        
-    </script>
+    <% for(let i=0;i <slots.length; i++) { %>
+        <p><%- JSON.stringify(slots[i]) %></p>
+    <% } %>
+    <div id='calendar'></div>
 </body>
