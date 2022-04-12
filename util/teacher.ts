@@ -1,6 +1,5 @@
-import { QueryResponse } from "@rockset/client/dist/codegen/api";
 import { addDocs, query } from "../db";
-import { googleUser, QueryCallback } from "../types";
+import { QueryCallback } from "../types";
 
 export const createTeacher = (teacherData: any) => {
     addDocs("teachers", [teacherData]);
@@ -8,6 +7,11 @@ export const createTeacher = (teacherData: any) => {
 
 export const getTeacher = (email: string, callback: QueryCallback) => {
     query({
-        query: `select * from \"office-hours\".teachers where email='${email}'`
+        query: `select * from \"office-hours\".teachers where email=:email`,
+        parameters: [{
+            name: "email",
+            type: "string",
+            value: email
+        }]
     }, callback);
 }
