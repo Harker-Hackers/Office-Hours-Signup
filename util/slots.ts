@@ -1,6 +1,7 @@
 import { QueryCallback, Slot } from "../types";
 import { addDocs, query, rmDocs } from "../db";
-import { QueryResponse } from "@rockset/client/dist/codegen/api";
+import { OrgPaymentMethodResponse, QueryResponse } from "@rockset/client/dist/codegen/api";
+
 
 export function toSQLDate(date:Date)
 {
@@ -9,24 +10,37 @@ export function toSQLDate(date:Date)
 
 export function toSQLDateTime(date:Date)
 {
-    return new Date().toISOString().slice(0, 19).replace('T', ' ');
+    return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
 export function toSQLTime(date:Date)
 {
-    return new Date().toISOString().slice(10, 19).replace('T', '');
+    return date.toISOString().slice(10, 19).replace('T', '');
 }
 
-export const createSlot = (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
+export const canCreateSlot = async (slotData: {date:string,starttime:string,endtime:string})=>{
+    return (await getSlots(new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime))).results?.length==0
+}
+
+export const createSlot = async (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
     console.log("pass1");
-    addDocs("slots", [{
-        date:slotData.date||toSQLDate(new Date()),
-        starttime:slotData.starttime||toSQLTime(new Date()),
-        endtime:slotData.endtime||toSQLTime(new Date()),
-        description:slotData.description||"",
-        teacher_id:slotData.teacher_id,
-        student_email:slotData.student_email||""
-    }]);
+    slotData.date=slotData.date||toSQLDate(new Date());
+    slotData.starttime=slotData.starttime||toSQLTime(new Date());
+    slotData.endtime=slotData.endtime||toSQLTime(new Date());
+    slotData.description=slotData.description||"";
+    slotData.student_email=slotData.student_email||"";
+    if(await canCreateSlot(slotData as {date:string,starttime:string,endtime:string}))
+    {
+        console.log("Y");
+        addDocs("slots", [{
+            date:slotData.date,
+            starttime:slotData.starttime,
+            endtime:slotData.endtime,
+            description:slotData.description,
+            teacher_id:slotData.teacher_id,
+            student_email:slotData.student_email
+        }]);
+    }
 }
 
 export const deleteSlot = (slot:{_id:string}) => {
@@ -60,14 +74,16 @@ export const getSlotsByTeacher = (teacher:any) => {
 class MySlotQuery {
     query: string;
     parameters: {name:string,type:string,value:string}[];
+    is_query: boolean;
     constructor(query:string,params:{name:string,type:string,value:string}[])
     {
         this.query=query;
         this.parameters=params;
+        this.is_query=true;
     }
     join(query:MySlotQuery)
     {
-        this.query+=" and "+query.query;
+        this.query+=(query.is_query?" and ":" ")+query.query;
         this.parameters=[...this.parameters,...query.parameters];
     }
     add(query:MySlotQuery)
@@ -75,19 +91,23 @@ class MySlotQuery {
         this.join(query);
         return this;
     }
+    construct_query()
+    {
+        return "select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query);
+    }
     get()
     {
-        console.log("select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query));
+        console.log(this.construct_query());
         return new Promise<QueryResponse>((resolve,reject)=>{
             query({
-                query: "select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query),
+                query: this.construct_query(),
                 parameters:this.parameters
             }, resolve);
         })
     }
 }
 
-export class TeacherSlotQuery extends MySlotQuery
+export class TeacherQuery extends MySlotQuery
 {
     constructor(teacher:string)
     {
@@ -100,7 +120,7 @@ export class TeacherSlotQuery extends MySlotQuery
     }
 }
 
-export class DateSlotQuery extends MySlotQuery
+export class DateQuery extends MySlotQuery
 {
     constructor(date:string|Date)
     {
@@ -121,7 +141,7 @@ export class DateSlotQuery extends MySlotQuery
     }
 }
 
-export class TimeRangeSlotQuery extends MySlotQuery
+export class TimeRangeQuery extends MySlotQuery
 {
     constructor(mintime:string|Date,maxtime:string|Date)
     {
@@ -142,7 +162,60 @@ export class TimeRangeSlotQuery extends MySlotQuery
     }
 }
 
-export const SlotQuery = { TimeRangeSlotQuery, DateSlotQuery, TeacherSlotQuery }
+export class DateTimeRangeQuery extends MySlotQuery
+{
+    constructor(date:string|Date,mintime:string|Date,maxtime:string|Date)
+    {
+        if(!(typeof(date)=="string"))
+            date=toSQLDate(date);
+        if(!(typeof(mintime)=="string"))
+            mintime=toSQLTime(mintime);
+        if(!(typeof(maxtime)=="string"))
+            maxtime=toSQLTime(maxtime);
+        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime and date = :date`,
+        [{
+            name:"mintime",
+            type:"time",
+            value:mintime
+        },{
+            name:"maxtime",
+            type:"time",
+            value:maxtime
+        },{
+            name:"date",
+            type:"string",
+            value:date
+        }])
+    }
+}
+
+export class NullQuery extends MySlotQuery
+{
+    constructor()
+    {
+        super(`teacher_id is null`,[]);
+    }
+}
+
+export class StartTimeOrder extends MySlotQuery
+{
+    constructor()
+    {
+        super(`order by CAST(starttime as time)`,[]);
+        this.is_query=false;
+    }
+}
+
+export class StartDateTimeOrder extends MySlotQuery
+{
+    constructor()
+    {
+        super(`order by PARSE_DATETIME_ISO8601(CONCAT(FORMAT_ISO8601(cast(date as date))," ",FORMAT_ISO8601(CAST(time as time))))`,[]);
+        this.is_query=false;
+    }
+}
+
+export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery, StartTimeOrder, StartDateTimeOrder }
 
 /**
  * Used to get slots based on queries
@@ -155,6 +228,11 @@ export const getSlots = (...q:MySlotQuery[]): Promise<QueryResponse>=> {
     let z=null;
     for(let i=0;i<q.length;i++)
     {
+        if(i!=q.length-1)
+        {
+            if(!q[i].is_query)
+                throw Error("QueryConstructionException: order must be the last")
+        }
         if(z==null)
             z=q[i] as MySlotQuery;
         else

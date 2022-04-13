@@ -1,8 +1,8 @@
-import { Student, Teacher, User } from "../types";
+import { Student, Teacher, Slot } from "../types";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { getTeacher } from "../util/teacher";
 import { getStudent } from "../util/student";
-import { getSlots, TeacherSlotQuery } from "./slots";
+import { getSlots, TeacherQuery, StartTimeOrder, StartDateTimeOrder } from "./slots";
 const jwt = require("jsonwebtoken");
 const jwtKey=require("../config.json").jwtKey;
 
@@ -15,7 +15,7 @@ export async function grabUserByEmail(email?:string)
         let j=await getTeacher(email) as any;
         if(j.results.length===0)
             return null;
-        let slots=await getSlots(new TeacherSlotQuery(j.results[0]._id))
+        let slots=await getSlots(new TeacherQuery(j.results[0]._id));
         return {"teacher":true,...j.results[0],"slots":slots.results} as Teacher;
     } else if (isStudent(email))
     {

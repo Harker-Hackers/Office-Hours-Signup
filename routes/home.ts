@@ -7,7 +7,6 @@ import { createTeacher } from "../util/teacher";
 import { createStudent } from "../util/student";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { SlotQuery, getSlots, createSlot, deleteSlot } from "../util/slots";
-import { User } from "@rockset/client/dist/codegen/api";
 
 let router = express.Router();
 
@@ -63,6 +62,12 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
+    setTimeout(function(){createSlot({
+        teacher_id:req.user._id,
+        date:"2022-04-12",
+        starttime:"06:50:00",
+        endtime:"08:00:00",
+    })},0)
     res.render("teacher/home.ejs",req.user);
 });
 
