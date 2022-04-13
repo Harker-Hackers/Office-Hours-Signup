@@ -5,8 +5,30 @@
     <p>Welcome, <%- name %></p>
 
     <h2>Create a new slot</h1>
-    <% for(let i=0;i <slots.length; i++) { %>
-        <p><%- JSON.stringify(slots[i]) %></p>
-    <% } %>
     <div id='calendar'></div>
+    <script>
+        slots=<%- JSON.stringify(slots) %>;
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                   right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                }
+            });
+            let slot;
+            for(let i=0;i<slots.length;i++)
+            {
+                slot=slots[i];
+                calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+                    title:"Meeting"
+                })
+            }
+            calendar.render();
+            //window.changeview=function(){calendar.changeView('dayGridWeek')}
+        });
+  
+      </script>
 </body>
