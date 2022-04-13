@@ -2,6 +2,7 @@ import { QueryCallback, Slot } from "../types";
 import { addDocs, query, rmDocs } from "../db";
 import { OrgPaymentMethodResponse, QueryResponse } from "@rockset/client/dist/codegen/api";
 
+
 export function toSQLDate(date:Date)
 {
     return date.toISOString().slice(0,10);
@@ -9,24 +10,37 @@ export function toSQLDate(date:Date)
 
 export function toSQLDateTime(date:Date)
 {
-    return new Date().toISOString().slice(0, 19).replace('T', ' ');
+    return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
 export function toSQLTime(date:Date)
 {
-    return new Date().toISOString().slice(10, 19).replace('T', '');
+    return date.toISOString().slice(10, 19).replace('T', '');
 }
 
-export const createSlot = (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
+export const canCreateSlot = async (slotData: {date:string,starttime:string,endtime:string})=>{
+    return (await getSlots(new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime))).results?.length==0
+}
+
+export const createSlot = async (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
     console.log("pass1");
-    addDocs("slots", [{
-        date:slotData.date||toSQLDate(new Date()),
-        starttime:slotData.starttime||toSQLTime(new Date()),
-        endtime:slotData.endtime||toSQLTime(new Date()),
-        description:slotData.description||"",
-        teacher_id:slotData.teacher_id,
-        student_email:slotData.student_email||""
-    }]);
+    slotData.date=slotData.date||toSQLDate(new Date());
+    slotData.starttime=slotData.starttime||toSQLTime(new Date());
+    slotData.endtime=slotData.endtime||toSQLTime(new Date());
+    slotData.description=slotData.description||"";
+    slotData.student_email=slotData.student_email||"";
+    if(await canCreateSlot(slotData as {date:string,starttime:string,endtime:string}))
+    {
+        console.log("Y");
+        addDocs("slots", [{
+            date:slotData.date,
+            starttime:slotData.starttime,
+            endtime:slotData.endtime,
+            description:slotData.description,
+            teacher_id:slotData.teacher_id,
+            student_email:slotData.student_email
+        }]);
+    }
 }
 
 export const deleteSlot = (slot:{_id:string}) => {
@@ -148,6 +162,33 @@ export class TimeRangeQuery extends MySlotQuery
     }
 }
 
+export class DateTimeRangeQuery extends MySlotQuery
+{
+    constructor(date:string|Date,mintime:string|Date,maxtime:string|Date)
+    {
+        if(!(typeof(date)=="string"))
+            date=toSQLDate(date);
+        if(!(typeof(mintime)=="string"))
+            mintime=toSQLTime(mintime);
+        if(!(typeof(maxtime)=="string"))
+            maxtime=toSQLTime(maxtime);
+        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime and date = :date`,
+        [{
+            name:"mintime",
+            type:"time",
+            value:mintime
+        },{
+            name:"maxtime",
+            type:"time",
+            value:maxtime
+        },{
+            name:"date",
+            type:"string",
+            value:date
+        }])
+    }
+}
+
 export class NullQuery extends MySlotQuery
 {
     constructor()
@@ -174,7 +215,7 @@ export class StartDateTimeOrder extends MySlotQuery
     }
 }
 
-export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, StartTimeOrder, StartDateTimeOrder }
+export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery, StartTimeOrder, StartDateTimeOrder }
 
 /**
  * Used to get slots based on queries
