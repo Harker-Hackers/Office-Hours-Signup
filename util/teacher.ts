@@ -6,13 +6,16 @@ export const createTeacher = (teacherData: any) => {
 }
 
 
-export const getTeacher = (email: string, callback: QueryCallback) => {
-    query({
-        query: `select * from \"office-hours\".teachers where email=:email`,
-        parameters: [{
-            name: "email",
-            type: "string",
-            value: email
-        }]
-    }, callback);
+export const getTeacher = (email: string) => {
+    return new Promise((resolve,reject)=>{
+        return query({
+            query: `select * from \"office-hours\".teachers where email=:email`,
+            parameters: [{
+                name: "email",
+                type: "string",
+                value: email
+            }]
+        },resolve);
+    })
+    
 }
