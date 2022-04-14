@@ -8,14 +8,14 @@
     <div id='calendar'></div>
     <script>
         slots=<%- JSON.stringify(slots) %>;
-        async function createSlot(){
+        async function createSlot(date,starttime,endtime){
             let r=await fetch('/api/create_slot', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({starttime:"03:18:04",endtime:"03:18:04"})
+                body: JSON.stringify({date:date,starttime:starttime,endtime:endtime})
             })
             console.log(await r.json());
         }
