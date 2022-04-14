@@ -28,6 +28,10 @@
                     left: 'prev,next today',
                     center: 'title',
                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                eventClick: (info) => {
+                    alert(info.event.title);
+                    console.log(info.event);
                 }
             });
             let slot;
