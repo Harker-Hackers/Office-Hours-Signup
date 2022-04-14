@@ -62,12 +62,12 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
-    setTimeout(function(){createSlot({
+    /*setTimeout(function(){createSlot({
         teacher_id:req.user._id,
         date:"2022-04-12",
-        starttime:"06:50:00",
-        endtime:"08:00:00",
-    })},0)
+        starttime:"02:50:00",
+        endtime:"03:00:00",
+    })},0)*/
     res.render("teacher/home.ejs",req.user);
 });
 

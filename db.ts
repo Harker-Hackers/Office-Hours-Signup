@@ -4,8 +4,8 @@ import { QueryCallback } from "./types";
 
 const client = rockset(require("./config.json").rocksetApiKey);
 
-export const addDocs = (collection: "slots" | "students" | "teachers", documents: any[]) => {
-    client.documents.addDocuments("office-hours", collection, { data: documents }).catch(console.log);
+export const addDocs = (collection: "slots" | "students" | "teachers", documents: any[],callback?:QueryCallback) => {
+    client.documents.addDocuments("office-hours", collection, { data: documents }).then(callback).catch(console.log);
 };
 export const rmDocs = (collection: "slots" | "students" | "teachers", documents: any[]) => {
     client.documents.deleteDocuments("office-hours", collection, { data: documents }).catch(console.log);

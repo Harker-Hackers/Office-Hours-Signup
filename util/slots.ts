@@ -18,10 +18,9 @@ export function toSQLTime(date:Date)
     return date.toISOString().slice(10, 19).replace('T', '');
 }
 
-export const canCreateSlot = async (slotData: {date:string,starttime:string,endtime:string})=>{
-    return (await getSlots(new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime))).results?.length==0
+export const canCreateSlot = async (slotData: Slot)=>{
+    return (await getSlots(new TeacherQuery(slotData.teacher_id),new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime))).results?.length==0
 }
-
 export const createSlot = async (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
     console.log("pass1");
     slotData.date=slotData.date||toSQLDate(new Date());
@@ -29,7 +28,7 @@ export const createSlot = async (slotData: {date?:string,starttime?:string,endti
     slotData.endtime=slotData.endtime||toSQLTime(new Date());
     slotData.description=slotData.description||"";
     slotData.student_email=slotData.student_email||"";
-    if(await canCreateSlot(slotData as {date:string,starttime:string,endtime:string}))
+    if(await canCreateSlot(slotData as Slot))
     {
         console.log("Y");
         addDocs("slots", [{
@@ -40,7 +39,9 @@ export const createSlot = async (slotData: {date?:string,starttime?:string,endti
             teacher_id:slotData.teacher_id,
             student_email:slotData.student_email
         }]);
+        return true;
     }
+    return false;
 }
 
 export const deleteSlot = (slot:{_id:string}) => {

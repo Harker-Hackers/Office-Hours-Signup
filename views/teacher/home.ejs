@@ -8,6 +8,18 @@
     <div id='calendar'></div>
     <script>
         slots=<%- JSON.stringify(slots) %>;
+        async function createSlot(){
+            let r=await fetch('/api/create_slot', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({starttime:"03:18:04",endtime:"03:18:04"})
+            })
+            console.log(await r.json());
+        }
+        window.createSlot=createSlot;
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             var calendar = new FullCalendar.Calendar(calendarEl, {
