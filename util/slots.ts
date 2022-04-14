@@ -30,7 +30,7 @@ export const createSlot = async (slotData: {date?:string,starttime?:string,endti
     slotData.student_email=slotData.student_email||"";
     if(await canCreateSlot(slotData as Slot))
     {
-        addDocs("slots", [{
+        let success=await addDocs("slots", [{
             date:slotData.date,
             starttime:slotData.starttime,
             endtime:slotData.endtime,
@@ -38,13 +38,17 @@ export const createSlot = async (slotData: {date?:string,starttime?:string,endti
             teacher_id:slotData.teacher_id,
             student_email:slotData.student_email
         }]);
-        return true;
+        if(success.data!=undefined)
+            return success.data[0].error==null;
     }
     return false;
 }
 
-export const deleteSlot = (slot:{_id:string}) => {
-    rmDocs("slots",[{_id:slot._id}]);
+export const deleteSlot = async (slot:{_id:string}) => {
+    let success=await rmDocs("slots",[{_id:slot._id}]);
+    if(success.data!=undefined)
+        return success.data[0].error==null;
+    return false;
 }
 
 export const getSlotById = (id: string) => {

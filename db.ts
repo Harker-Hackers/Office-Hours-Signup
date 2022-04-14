@@ -1,14 +1,18 @@
 import rockset, {  } from "@rockset/client";
-import { QueryRequestSql } from "@rockset/client/dist/codegen/api";
+import { AddDocumentsResponse, DeleteDocumentsResponse, QueryRequestSql } from "@rockset/client/dist/codegen/api";
 import { QueryCallback } from "./types";
 
 const client = rockset(require("./config.json").rocksetApiKey);
 
-export const addDocs = (collection: "slots" | "students" | "teachers", documents: any[],callback?:QueryCallback) => {
-    client.documents.addDocuments("office-hours", collection, { data: documents }).then(callback).catch(console.log);
-};
+export const addDocs = (collection: "slots" | "students" | "teachers", documents: any[]) => {
+    return new Promise<AddDocumentsResponse>((resolve,reject)=>{
+        client.documents.addDocuments("office-hours", collection, { data: documents }).then(resolve).catch(console.log)
+    });
+}
 export const rmDocs = (collection: "slots" | "students" | "teachers", documents: any[]) => {
-    client.documents.deleteDocuments("office-hours", collection, { data: documents }).catch(console.log);
+    return new Promise<DeleteDocumentsResponse>((resolve,reject)=>{
+        client.documents.deleteDocuments("office-hours", collection, { data: documents }).then(resolve).catch(console.log);
+    });
 }
 export const query = (queryBody: QueryRequestSql, callback: QueryCallback) => {
     client.queries.query({ sql: queryBody }).then(callback).catch(console.log);

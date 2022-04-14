@@ -32,7 +32,9 @@
                 },
                 body: JSON.stringify({"date":slot.date,"starttime":slot.starttime,"endtime":slot.endtime})
             })
-            console.log(await r.json());
+            let success=await r.json();
+            if(success.success)
+                location.reload();
         }
         async function deleteSlot(id){
             let r=await fetch('/api/delete_slot', {
@@ -43,7 +45,9 @@
                 },
                 body:JSON.stringify({id:id})
             })
-            return await r.json();
+            let success=await r.json();
+            if(success.success)
+                location.reload();
         }
         window.createSlot=createSlot;
         document.addEventListener('DOMContentLoaded', function() {
