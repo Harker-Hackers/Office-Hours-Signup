@@ -1,7 +1,7 @@
 import express from "express";
 import { Slot } from "../types";
 import { teacherOnly } from "../util/authorizationHandler";
-import { createSlot } from "../util/slots";
+import { createSlot, deleteSlot, getSlotById } from "../util/slots";
 
 let router = express.Router();
 
@@ -9,6 +9,7 @@ router.use(express.json());
 router.use(express.urlencoded({extended: true}));
 
 router.post("/create_slot",teacherOnly,async (req:any,res)=>{
+    console.log(req.body);
     console.log({
         teacher_id: req.user._id,
         starttime: req.body.starttime,
@@ -23,8 +24,20 @@ router.post("/create_slot",teacherOnly,async (req:any,res)=>{
         date: req.body.date,
         description: req.body.description
     })
-    console.log("H");
     res.json({success})
+})
+
+router.post("/delete_slot",teacherOnly,async (req:any,res)=>{
+    let success=await deleteSlot({_id:req.body.id});
+    res.json({success});
+})
+
+router.get("/delete_slots",teacherOnly, (req:any,res)=>{
+    let slots=req.user.slots;
+    for(let i=0;i<slots.length;i++)
+    {
+        deleteSlot(slots[i]);
+    }
 })
 
 export default router;

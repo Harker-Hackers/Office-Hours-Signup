@@ -19,10 +19,10 @@ export function toSQLTime(date:Date)
 }
 
 export const canCreateSlot = async (slotData: Slot)=>{
-    return (await getSlots(new TeacherQuery(slotData.teacher_id),new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime))).results?.length==0
+    let sl=await getSlots(new TeacherQuery(slotData.teacher_id),new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime));
+    return sl.results?.length==0 && Date.parse("1970-01-01 "+slotData.endtime)>Date.parse("1970-01-01 "+slotData.starttime)+1000*300;
 }
 export const createSlot = async (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
-    console.log("pass1");
     slotData.date=slotData.date||toSQLDate(new Date());
     slotData.starttime=slotData.starttime||toSQLTime(new Date());
     slotData.endtime=slotData.endtime||toSQLTime(new Date());
@@ -30,7 +30,6 @@ export const createSlot = async (slotData: {date?:string,starttime?:string,endti
     slotData.student_email=slotData.student_email||"";
     if(await canCreateSlot(slotData as Slot))
     {
-        console.log("Y");
         addDocs("slots", [{
             date:slotData.date,
             starttime:slotData.starttime,

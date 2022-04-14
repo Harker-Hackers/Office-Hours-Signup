@@ -8,16 +8,42 @@
     <div id='calendar'></div>
     <script>
         slots=<%- JSON.stringify(slots) %>;
-        async function createSlot(date,starttime,endtime){
+        function toSQLDate(date)
+        {
+            return date.toISOString().slice(0,10);
+        }
+
+        function toSQLDateTime(date)
+        {
+            return date.toISOString().slice(0, 19).replace('T', ' ');
+        }
+
+        function toSQLTime(date)
+        {
+            return date.toISOString().slice(10, 19).replace('T', '');
+        }
+        async function createSlot(slot){
+            slot={date:"",starttime:"",endtime:"",...slot};
             let r=await fetch('/api/create_slot', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({date:date,starttime:starttime,endtime:endtime})
+                body: JSON.stringify({"date":slot.date,"starttime":slot.starttime,"endtime":slot.endtime})
             })
             console.log(await r.json());
+        }
+        async function deleteSlot(id){
+            let r=await fetch('/api/delete_slot', {
+                method:'POST',
+                headers:{
+                    'Accept':'application/json',
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({id:id})
+            })
+            return await r.json();
         }
         window.createSlot=createSlot;
         document.addEventListener('DOMContentLoaded', function() {
@@ -27,19 +53,23 @@
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                   right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
                 eventClick: (info) => {
-                    alert(info.event.title);
-                    console.log(info.event);
+                    confirm("Are you sure you want to delete this event?")&&deleteSlot(info.event.extendedProps.slot_id)
+                },
+                dateClick: (info) => {
+                    console.log(info);
+                    createSlot({date:toSQLDate(info.date),starttime:prompt("start time (hh:mm:ss)"),endtime:prompt("end time (hh:mm:ss)")});
                 }
             });
             let slot;
             for(let i=0;i<slots.length;i++)
             {
+                console.log(slots[i])
                 slot=slots[i];
                 calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
-                    title:"Meeting"
+                    title:"Meeting",slot_id:slot._id
                 })
             }
             calendar.render();
