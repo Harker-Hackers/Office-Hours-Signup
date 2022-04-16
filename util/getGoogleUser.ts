@@ -10,7 +10,7 @@ export default async (token: string) => {
         audience: clientId
     });
     const payload = ticket.getPayload();
-    if(!payload) {
+    if (!payload) {
         throw "User not found";
     }
     return payload as googleUser;

@@ -7,7 +7,7 @@ export const createTeacher = (teacherData: any) => {
 
 
 export const getTeacher = (email: string) => {
-    return new Promise((resolve,reject)=>{
+    return new Promise((resolve, reject) => {
         query({
             query: `select * from \"office-hours\".teachers where email=:email`,
             parameters: [{
