@@ -4,9 +4,10 @@ import { grabUserByEmail, login, teacherOnly, studentOnly } from "../util/author
 import getGoogleUser from '../util/getGoogleUser';
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
-import { createStudent } from "../util/student";
+import { createStudent, deleteStudent } from "../util/student";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { SlotQuery, getSlots, createSlot, deleteSlot } from "../util/slots";
+import { editDocs } from "../db";
 
 let router = express.Router();
 
@@ -48,7 +49,8 @@ router.post("/", async (req, res) => {
                 name: googleUser.name,
                 picture: googleUser.picture,
                 given_name: googleUser.given_name,
-                family_name: googleUser.family_name
+                family_name: googleUser.family_name,
+                teachers: []
             });
             user = await grabUserByEmail(googleUser.email);
         }
@@ -60,6 +62,10 @@ router.post("/", async (req, res) => {
         res.render("home.ejs", {error: "Please signin with your <b>Harker</b> email."});
     }
 });
+
+router.get("/test",async(req,res)=>{
+    console.log()
+})
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
     /*setTimeout(function(){createSlot({

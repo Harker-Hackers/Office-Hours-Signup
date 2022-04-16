@@ -30,7 +30,9 @@ export interface Teacher extends User{
 
 export interface Student extends User{
     slots: Slot[],
-    teacher:false
+    teacher:false,
+    teachers:string[],
+    teacher_slots: Slot[]
 }
 
 export interface DatabaseItem

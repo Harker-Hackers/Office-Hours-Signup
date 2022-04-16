@@ -2,7 +2,7 @@ import { Student, Teacher, Slot } from "../types";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { getTeacher } from "../util/teacher";
 import { getStudent } from "../util/student";
-import { getSlots, TeacherQuery, StartTimeOrder, StartDateTimeOrder } from "./slots";
+import { getSlots, TeacherQuery, StudentQuery, MultiTeacherQuery } from "./slots";
 const jwt = require("jsonwebtoken");
 const jwtKey=require("../config.json").jwtKey;
 
@@ -22,7 +22,13 @@ export async function grabUserByEmail(email?:string)
         let j=await getStudent(email) as any;
         if(j.results.length===0)
             return null;
-        return {"teacher":false,...j.results[0]} as Student;
+        let slots=await getSlots(new StudentQuery(j.results[0]._id));
+        let teacher_slots;
+        if(j.results[0].teachers.length>0)
+            teacher_slots=(await getSlots(new MultiTeacherQuery(j.results[0].teachers))).results;
+        else
+            teacher_slots=[];
+        return {"teacher":false,"slots":slots.results,teacher_slots:teacher_slots,...j.results[0]} as Student;
     }
     return null;
 }

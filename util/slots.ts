@@ -124,6 +124,24 @@ export class TeacherQuery extends MySlotQuery
     }
 }
 
+export class MultiTeacherQuery extends MySlotQuery
+{
+    constructor(teacher:string[])
+    {
+        let qu='(';
+        let params=[];
+        for(let i=0;i<teacher.length;i++)
+        {
+            if(i!=0)
+                qu+=' OR '
+            qu+='teacher_id = :teachername'+i;
+            params.push({name:"teachername"+i,type:"string",value:teacher[i]});
+        }
+        qu+=")";
+        super(qu,params);
+    }
+}
+
 export class DateQuery extends MySlotQuery
 {
     constructor(date:string|Date)
@@ -201,6 +219,14 @@ export class NullQuery extends MySlotQuery
     }
 }
 
+export class StudentQuery extends MySlotQuery
+{
+    constructor(student:string)
+    {
+        super(`student_id = :student`,[{name:"student",type:"string",value:student}]);
+    }
+}
+
 export class StartTimeOrder extends MySlotQuery
 {
     constructor()
@@ -219,7 +245,8 @@ export class StartDateTimeOrder extends MySlotQuery
     }
 }
 
-export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery, StartTimeOrder, StartDateTimeOrder }
+export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery,
+    StudentQuery, MultiTeacherQuery, StartTimeOrder, StartDateTimeOrder }
 
 /**
  * Used to get slots based on queries
