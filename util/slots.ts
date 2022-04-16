@@ -3,56 +3,52 @@ import { addDocs, query, rmDocs } from "../db";
 import { OrgPaymentMethodResponse, QueryResponse } from "@rockset/client/dist/codegen/api";
 
 
-export function toSQLDate(date:Date)
-{
-    return date.toISOString().slice(0,10);
+export function toSQLDate(date: Date) {
+    return date.toISOString().slice(0, 10);
 }
 
-export function toSQLDateTime(date:Date)
-{
+export function toSQLDateTime(date: Date) {
     return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
-export function toSQLTime(date:Date)
-{
+export function toSQLTime(date: Date) {
     return date.toISOString().slice(10, 19).replace('T', '');
 }
 
-export const canCreateSlot = async (slotData: Slot)=>{
-    let sl=await getSlots(new TeacherQuery(slotData.teacher_id),new DateTimeRangeQuery(slotData.date,slotData.starttime,slotData.endtime));
-    return sl.results?.length==0 && Date.parse("1970-01-01 "+slotData.endtime)>Date.parse("1970-01-01 "+slotData.starttime)+1000*300;
+export const canCreateSlot = async (slotData: Slot) => {
+    let sl = await getSlots(new TeacherQuery(slotData.teacher_id), new DateTimeRangeQuery(slotData.date, slotData.starttime, slotData.endtime));
+    return sl.results?.length == 0 && Date.parse("1970-01-01 " + slotData.endtime) > Date.parse("1970-01-01 " + slotData.starttime) + 1000 * 300;
 }
-export const createSlot = async (slotData: {date?:string,starttime?:string,endtime?:string,description?:string,teacher_id:string,student_email?:string}) => {
-    slotData.date=slotData.date||toSQLDate(new Date());
-    slotData.starttime=slotData.starttime||toSQLTime(new Date());
-    slotData.endtime=slotData.endtime||toSQLTime(new Date());
-    slotData.description=slotData.description||"";
-    slotData.student_email=slotData.student_email||"";
-    if(await canCreateSlot(slotData as Slot))
-    {
-        let success=await addDocs("slots", [{
-            date:slotData.date,
-            starttime:slotData.starttime,
-            endtime:slotData.endtime,
-            description:slotData.description,
-            teacher_id:slotData.teacher_id,
-            student_email:slotData.student_email
+export const createSlot = async (slotData: { date?: string, starttime?: string, endtime?: string, description?: string, teacher_id: string, student_email?: string }) => {
+    slotData.date = slotData.date || toSQLDate(new Date());
+    slotData.starttime = slotData.starttime || toSQLTime(new Date());
+    slotData.endtime = slotData.endtime || toSQLTime(new Date());
+    slotData.description = slotData.description || "";
+    slotData.student_email = slotData.student_email || "";
+    if (await canCreateSlot(slotData as Slot)) {
+        let success = await addDocs("slots", [{
+            date: slotData.date,
+            starttime: slotData.starttime,
+            endtime: slotData.endtime,
+            description: slotData.description,
+            teacher_id: slotData.teacher_id,
+            student_email: slotData.student_email
         }]);
-        if(success.data!=undefined)
-            return success.data[0].error==null;
+        if (success.data != undefined)
+            return success.data[0].error == null;
     }
     return false;
 }
 
-export const deleteSlot = async (slot:{_id:string}) => {
-    let success=await rmDocs("slots",[{_id:slot._id}]);
-    if(success.data!=undefined)
-        return success.data[0].error==null;
+export const deleteSlot = async (slot: { _id: string }) => {
+    let success = await rmDocs("slots", [{ _id: slot._id }]);
+    if (success.data != undefined)
+        return success.data[0].error == null;
     return false;
 }
 
 export const getSlotById = (id: string) => {
-    return new Promise((resolve,reject)=>{
+    return new Promise((resolve, reject) => {
         query({
             query: `select * from \"office-hours\".slots where _id='${id}'`
         }, resolve);
@@ -77,176 +73,153 @@ export const getSlotsByTeacher = (teacher:any) => {
 */
 class MySlotQuery {
     query: string;
-    parameters: {name:string,type:string,value:string}[];
+    parameters: { name: string, type: string, value: string }[];
     is_query: boolean;
-    constructor(query:string,params:{name:string,type:string,value:string}[])
-    {
-        this.query=query;
-        this.parameters=params;
-        this.is_query=true;
+    constructor(query: string, params: { name: string, type: string, value: string }[]) {
+        this.query = query;
+        this.parameters = params;
+        this.is_query = true;
     }
-    join(query:MySlotQuery)
-    {
-        this.query+=(query.is_query?" and ":" ")+query.query;
-        this.parameters=[...this.parameters,...query.parameters];
+    join(query: MySlotQuery) {
+        this.query += (query.is_query ? " and " : " ") + query.query;
+        this.parameters = [...this.parameters, ...query.parameters];
     }
-    add(query:MySlotQuery)
-    {
+    add(query: MySlotQuery) {
         this.join(query);
         return this;
     }
-    construct_query()
-    {
-        return "select * from \"office-hours\".slots " + (this.query==""?"":"where "+this.query);
+    construct_query() {
+        return "select * from \"office-hours\".slots " + (this.query == "" ? "" : "where " + this.query);
     }
-    get()
-    {
-        console.log(this.construct_query());
-        return new Promise<QueryResponse>((resolve,reject)=>{
+    get() {
+        return new Promise<QueryResponse>((resolve, reject) => {
             query({
                 query: this.construct_query(),
-                parameters:this.parameters
+                parameters: this.parameters
             }, resolve);
         })
     }
 }
 
-export class TeacherQuery extends MySlotQuery
-{
-    constructor(teacher:string)
-    {
+export class TeacherQuery extends MySlotQuery {
+    constructor(teacher: string) {
         super(`teacher_id = :teachername`,
-        [{
-            name:"teachername",
-            type:"string",
-            value:teacher.toString()
-        }])
-    }
-}
-
-export class MultiTeacherQuery extends MySlotQuery
-{
-    constructor(teacher:string[])
-    {
-        let qu='(';
-        let params=[];
-        for(let i=0;i<teacher.length;i++)
-        {
-            if(i!=0)
-                qu+=' OR '
-            qu+='teacher_id = :teachername'+i;
-            params.push({name:"teachername"+i,type:"string",value:teacher[i]});
-        }
-        qu+=")";
-        super(qu,params);
-    }
-}
-
-export class DateQuery extends MySlotQuery
-{
-    constructor(date:string|Date)
-    {
-        if(typeof date === "string")
-            super(`date = :date`,
             [{
-                name:"date",
-                type:"string",
-                value:date
+                name: "teachername",
+                type: "string",
+                value: teacher.toString()
             }])
+    }
+}
+
+export class MultiTeacherQuery extends MySlotQuery {
+    constructor(teacher: string[]) {
+        let qu = '(';
+        let params = [];
+        for (let i = 0; i < teacher.length; i++) {
+            if (i != 0)
+                qu += ' OR '
+            qu += 'teacher_id = :teachername' + i;
+            params.push({ name: "teachername" + i, type: "string", value: teacher[i] });
+        }
+        qu += ")";
+        super(qu, params);
+    }
+}
+
+export class DateQuery extends MySlotQuery {
+    constructor(date: string | Date) {
+        if (typeof date === "string")
+            super(`date = :date`,
+                [{
+                    name: "date",
+                    type: "string",
+                    value: date
+                }])
         else
             super(`date = :date`,
+                [{
+                    name: "date",
+                    type: "string",
+                    value: toSQLDate(date)
+                }])
+    }
+}
+
+export class TimeRangeQuery extends MySlotQuery {
+    constructor(mintime: string | Date, maxtime: string | Date) {
+        if (!(typeof (mintime) == "string"))
+            mintime = toSQLTime(mintime);
+        if (!(typeof (maxtime) == "string"))
+            maxtime = toSQLTime(maxtime);
+        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime`,
             [{
-                name:"date",
-                type:"string",
-                value:toSQLDate(date)
+                name: "mintime",
+                type: "time",
+                value: mintime
+            }, {
+                name: "maxtime",
+                type: "time",
+                value: maxtime
             }])
     }
 }
 
-export class TimeRangeQuery extends MySlotQuery
-{
-    constructor(mintime:string|Date,maxtime:string|Date)
-    {
-        if(!(typeof(mintime)=="string"))
-            mintime=toSQLTime(mintime);
-        if(!(typeof(maxtime)=="string"))
-            maxtime=toSQLTime(maxtime);
-        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime`,
-        [{
-            name:"mintime",
-            type:"time",
-            value:mintime
-        },{
-            name:"maxtime",
-            type:"time",
-            value:maxtime
-        }])
-    }
-}
-
-export class DateTimeRangeQuery extends MySlotQuery
-{
-    constructor(date:string|Date,mintime:string|Date,maxtime:string|Date)
-    {
-        if(!(typeof(date)=="string"))
-            date=toSQLDate(date);
-        if(!(typeof(mintime)=="string"))
-            mintime=toSQLTime(mintime);
-        if(!(typeof(maxtime)=="string"))
-            maxtime=toSQLTime(maxtime);
+export class DateTimeRangeQuery extends MySlotQuery {
+    constructor(date: string | Date, mintime: string | Date, maxtime: string | Date) {
+        if (!(typeof (date) == "string"))
+            date = toSQLDate(date);
+        if (!(typeof (mintime) == "string"))
+            mintime = toSQLTime(mintime);
+        if (!(typeof (maxtime) == "string"))
+            maxtime = toSQLTime(maxtime);
         super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime and date = :date`,
-        [{
-            name:"mintime",
-            type:"time",
-            value:mintime
-        },{
-            name:"maxtime",
-            type:"time",
-            value:maxtime
-        },{
-            name:"date",
-            type:"string",
-            value:date
-        }])
+            [{
+                name: "mintime",
+                type: "time",
+                value: mintime
+            }, {
+                name: "maxtime",
+                type: "time",
+                value: maxtime
+            }, {
+                name: "date",
+                type: "string",
+                value: date
+            }])
     }
 }
 
-export class NullQuery extends MySlotQuery
-{
-    constructor()
-    {
-        super(`teacher_id is null`,[]);
+export class NullQuery extends MySlotQuery {
+    constructor() {
+        super(`teacher_id is null`, []);
     }
 }
 
-export class StudentQuery extends MySlotQuery
-{
-    constructor(student:string)
-    {
-        super(`student_id = :student`,[{name:"student",type:"string",value:student}]);
+export class StudentQuery extends MySlotQuery {
+    constructor(student: string) {
+        super(`student_id = :student`, [{ name: "student", type: "string", value: student }]);
     }
 }
 
-export class StartTimeOrder extends MySlotQuery
-{
-    constructor()
-    {
-        super(`order by CAST(starttime as time)`,[]);
-        this.is_query=false;
+export class StartTimeOrder extends MySlotQuery {
+    constructor() {
+        super(`order by CAST(starttime as time)`, []);
+        this.is_query = false;
     }
 }
 
-export class StartDateTimeOrder extends MySlotQuery
-{
-    constructor()
-    {
-        super(`order by PARSE_DATETIME_ISO8601(CONCAT(FORMAT_ISO8601(cast(date as date))," ",FORMAT_ISO8601(CAST(time as time))))`,[]);
-        this.is_query=false;
+export class StartDateTimeOrder extends MySlotQuery {
+    constructor() {
+        super(`order by PARSE_DATETIME_ISO8601(CONCAT(FORMAT_ISO8601(cast(date as date))," ",FORMAT_ISO8601(CAST(time as time))))`, []);
+        this.is_query = false;
     }
 }
 
-export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery,
-    StudentQuery, MultiTeacherQuery, StartTimeOrder, StartDateTimeOrder }
+export const SlotQuery = {
+    TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery,
+    StudentQuery, MultiTeacherQuery, StartTimeOrder, StartDateTimeOrder
+}
 
 /**
  * Used to get slots based on queries
@@ -255,22 +228,20 @@ export const SlotQuery = { TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, D
  * @param q list of queries
  * @returns promise
  */
-export const getSlots = (...q:MySlotQuery[]): Promise<QueryResponse>=> {
-    let z=null;
-    for(let i=0;i<q.length;i++)
-    {
-        if(i!=q.length-1)
-        {
-            if(!q[i].is_query)
+export const getSlots = (...q: MySlotQuery[]): Promise<QueryResponse> => {
+    let z = null;
+    for (let i = 0; i < q.length; i++) {
+        if (i != q.length - 1) {
+            if (!q[i].is_query)
                 throw Error("QueryConstructionException: order must be the last")
         }
-        if(z==null)
-            z=q[i] as MySlotQuery;
+        if (z == null)
+            z = q[i] as MySlotQuery;
         else
             z.add(q[i]);
     }
-    if(z!=null)
+    if (z != null)
         return z.get();
     else
-        return new MySlotQuery("",[]).get();
+        return new MySlotQuery("", []).get();
 }
