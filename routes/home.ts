@@ -4,7 +4,7 @@ import { grabUserByEmail, login, teacherOnly, studentOnly } from "../util/author
 import getGoogleUser from '../util/getGoogleUser';
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
-import { createStudent, deleteStudent } from "../util/student";
+import { addTeachersToStudent, createStudent, deleteStudent } from "../util/student";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { SlotQuery, getSlots, createSlot, deleteSlot } from "../util/slots";
 import { editDocs } from "../db";
@@ -62,9 +62,11 @@ router.post("/", async (req, res) => {
         res.render("home.ejs", {error: "Please signin with your <b>Harker</b> email."});
     }
 });
-
-router.get("/test",async(req,res)=>{
-    console.log()
+router.get("/sdf",async(req:any,res)=>{
+    await deleteStudent({_id:"117513228835561361338"})
+})
+router.get("/test",studentOnly,async(req:any,res)=>{
+    console.log(await addTeachersToStudent(req.user,["3424237428347"]))
 })
 
 router.get("/teacher",teacherOnly,async (req:any,res)=>{
