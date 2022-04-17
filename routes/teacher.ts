@@ -9,4 +9,8 @@ router.get("/", teacherOnly, async (req: any, res) => {
     res.render("teacher/home.ejs", req.user);
 });
 
+router.get("/slots", teacherOnly, async (req: any, res) => {
+    res.render("teacher/slots.ejs", req.user);
+});
+
 export default router;

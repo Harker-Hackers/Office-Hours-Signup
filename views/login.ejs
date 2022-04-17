@@ -1,0 +1,45 @@
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Login" }) %>
+    <style>
+        #error { color: red; }
+    </style>
+</head>
+<body class="ms-4 me-4">
+    <%- include(`${base}/views/partials/homeTopBar.ejs`, { logo: false }) %>
+    <p>Login with Google</p>
+    <div id="g_id_onload"
+        data-client_id="582829001790-6u1eiea25r6g998jrn6gg2ocmj8jnb0m.apps.googleusercontent.com"
+        data-login_uri="/login"
+        data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+        data-type="standard"
+        data-size="large"
+        data-theme="outline"
+        data-text="sign_in_with"
+        data-shape="rectangular"
+        data-logo_alignment="left">
+    </div>
+    <p id="error"><% if (typeof error == "string") { %>
+        <%- error %>
+    <% } %></p>
+
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+    function handleCredentialResponse(response) {
+        console.log(`Encoded JWT ID token: ${response.credential}`);
+    }
+    window.onload = () => {
+        google.accounts.id.initialize({
+            client_id: "582829001790-6u1eiea25r6g998jrn6gg2ocmj8jnb0m.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large" }
+        );
+        google.accounts.id.prompt();
+    }
+    </script>
+</body>
