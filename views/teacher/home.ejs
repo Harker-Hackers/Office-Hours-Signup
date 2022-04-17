@@ -3,7 +3,7 @@
     <%- include(`${base}/views/partials/calendar.ejs`) %>
 </head>
 <body>
-    <%- include(`${base}/views/partials/teacher/topBar.ejs`) %>
+    <%- include(`${base}/views/partials/teacher/topBar.ejs`, { active: "home" }) %>
     <div class="mt-2 ms-4 me-4">
         <h1 class="text-center">Teacher Portal</h1>
         <h5 class="text-center">Welcome, <%- name %></p>
