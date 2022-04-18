@@ -1,5 +1,25 @@
-<%- include(`${base}/views/partials/head.ejs`) %>
-<body>
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Portal" }) %>
+    <%- include(`${base}/views/partials/calendar.ejs`) %>
+</head>
+<body class="ms-4 me-4">
     <h1>Student Home</h1>
     <p>Welcome, <%- name %></p>
+    <div id='calendar'></div>
+    <script>
+        let my_slots=<%- JSON.stringify(slots) %>;
+        let teacher_slots=<%- JSON.stringify(teacher_slots) %>;
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                }
+            });
+            calendar.render();
+        });
+    </script>
 </body>

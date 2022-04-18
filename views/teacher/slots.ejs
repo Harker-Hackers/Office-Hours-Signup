@@ -1,0 +1,83 @@
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Calendar" }) %>
+    <%- include(`${base}/views/partials/calendar.ejs`) %>
+</head>
+<body>
+    <%- include(`${base}/views/partials/teacher/topBar.ejs`, { active: "slots" }) %>
+    <div class="ms-4 me-4">
+        <div class="card">
+            <div class="card-body">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        slots=<%- JSON.stringify(slots) %>;
+        function toSQLDate(date)
+        {
+            return date.toISOString().slice(0,10);
+        }
+
+        function toSQLDateTime(date)
+        {
+            return date.toISOString().slice(0, 19).replace("T", " ");
+        }
+
+        function toSQLTime(date)
+        {
+            return date.toISOString().slice(10, 19).replace("T", "");
+        }
+        async function createSlot(slot){
+            slot={date:"",starttime:"",endtime:"",...slot};
+            let r=await fetch("/api/create_slot", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({"date":slot.date,"starttime":slot.starttime,"endtime":slot.endtime})
+            })
+            let success=await r.json();
+            if(success.success){setTimeout(document.reload,200)}
+        }
+        async function deleteSlot(id){
+            let r=await fetch("/api/delete_slot", {
+                method:"POST",
+                headers:{
+                    "Accept":"application/json",
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({id:id})
+            })
+            let success=await r.json();
+            if(success.success)
+                location.reload();
+        }
+        window.createSlot=createSlot;
+        document.addEventListener("DOMContentLoaded", function() {
+            var calendarEl = document.getElementById("calendar");
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: "dayGridMonth",
+                headerToolbar: {
+                    left: "prev,next today",
+                    center: "title",
+                    right: "dayGridMonth,timeGridWeek,timeGridDay"
+                },
+                eventClick: (info) => {
+                    confirm("Are you sure you want to delete this event?") && deleteSlot(info.event.extendedProps.slot_id)
+                },
+                dateClick: (info) => {
+                    createSlot({date:toSQLDate(info.date), starttime: prompt("start time (hh:mm:ss)"), endtime: prompt("end time (hh:mm:ss)")});
+                }
+            });
+            let slot;
+            for(let i=0;i<slots.length;i++) {
+                slot=slots[i];
+                calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+                    title:"Meeting",slot_id:slot._id
+                });
+            }
+            calendar.render();
+        });
+    </script>
+</body>
