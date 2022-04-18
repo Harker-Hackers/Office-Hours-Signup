@@ -20,19 +20,22 @@ export interface User {
     picture: string,
     given_name: string,
     family_name: string,
-    _event_time: string
+    _event_time: string,
+    role?: string
 }
 
 export interface Teacher extends User {
+    teacher: any;
     slots: Slot[],
-    teacher: true
+    role?: string,
 }
 
 export interface Student extends User {
     slots: Slot[],
     teacher: false,
     teachers: string[],
-    teacher_slots: Slot[]
+    teacher_slots: Slot[],
+    role?: string
 }
 
 export interface DatabaseItem {
