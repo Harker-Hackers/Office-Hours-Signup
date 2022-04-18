@@ -3,7 +3,7 @@ import { isTeacher, isStudent } from "../util/userHandler";
 import { getTeacher } from "../util/teacher";
 import { getStudent } from "../util/student";
 import { getSlots, TeacherQuery, StudentQuery, MultiTeacherQuery } from "./slots";
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken")
 const jwtKey = require("../config.json").jwtKey;
 
 export async function grabUserByEmail(email?: string) {
@@ -50,14 +50,30 @@ export async function teacherOnly(req: any, res: any, n: any) {
         let user = await grabUserByEmail(data.u);
         if (user == null || !user.teacher)
             return res.sendStatus(403);
-        req.user = user as Teacher;
+        req.user = user;
         refresh(req, res, n);
     } catch {
         return res.sendStatus(403);
     }
 }
 
-export async function studentOnly(req: any, res: any, n: any) {
+export async function isStoredTeacher(req: any, res: any) {
+    const token = req.cookies.jwt;
+    if (!token) {
+        return [500, {}]
+    }
+    try {
+        const data = jwt.verify(token, jwtKey);
+        let user = await grabUserByEmail(data.u);
+        if (user == null || !user.teacher)
+            return [500, {}]
+        return [200, user];
+    } catch {
+        return [500, {}];
+    }
+}
+
+export async function studentOnly(req: any, res: any, n: any, dontRefresh?: boolean) {
     const token = req.cookies.jwt;
     if (!token) {
         return res.sendStatus(403);
@@ -67,10 +83,33 @@ export async function studentOnly(req: any, res: any, n: any) {
         let user = await grabUserByEmail(data.u);
         if (user == null || user.teacher)
             return res.sendStatus(403);
-        req.user = user as Student;
+        req.user = user;
         refresh(req, res, n);
+        /*
+        if(dontRefresh === true)
+            return [200, user];
+        else
+            refresh(req, res, n);
+            */
     } catch {
         return res.sendStatus(403);
+    }
+    //return 200;
+}
+
+export async function isStoredStudent(req: any, res: any) {
+    const token = req.cookies.jwt;
+    if (!token) {
+        return [500, {}]
+    }
+    try {
+        const data = jwt.verify(token, jwtKey);
+        let user = await grabUserByEmail(data.u);
+        if (user == null || user.teacher)
+            return [500, {}]
+        return [200, user];
+    } catch {
+        return [500, {}]
     }
 }
 
