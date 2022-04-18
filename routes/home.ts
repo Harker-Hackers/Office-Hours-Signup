@@ -4,11 +4,7 @@ import { grabUserByEmail, login, teacherOnly } from "../util/authorizationHandle
 import getGoogleUser from '../util/getGoogleUser';
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
-<<<<<<< HEAD
-import { addTeachersToStudent, createStudent, deleteStudent } from "../util/student";
-=======
 import { createStudent } from "../util/student";
->>>>>>> e2c2de74d4b4ac6616df3d74eeecf86ed1820310
 import { isTeacher, isStudent } from "../util/userHandler";
 
 let router = express.Router();
@@ -68,29 +64,6 @@ router.post("/login", async (req, res) => {
         res.render("login.ejs", { error: "Please signin with your <b>Harker</b> email." });
     }
 });
-<<<<<<< HEAD
-router.get("/sdf",async(req:any,res)=>{
-    await deleteStudent({_id:"117513228835561361338"})
-})
-router.get("/test",studentOnly,async(req:any,res)=>{
-    console.log(await addTeachersToStudent(req.user,["3424237428347"]))
-})
-
-router.get("/teacher",teacherOnly,async (req:any,res)=>{
-    /*setTimeout(function(){createSlot({
-        teacher_id:req.user._id,
-        date:"2022-04-12",
-        starttime:"02:50:00",
-        endtime:"03:00:00",
-    })},0)*/
-    res.render("teacher/home.ejs",req.user);
-});
-
-router.get("/student",studentOnly,async (req:any,res)=>{
-    res.render("student/home.ejs",req.user);
-});
-=======
->>>>>>> e2c2de74d4b4ac6616df3d74eeecf86ed1820310
 
 router.get("/logout", async (req, res) => {
     console.log(req.cookies.jwt)

@@ -13,6 +13,9 @@
         </div>
     </div>
     <script>
+        const DEFAULT_SLOT_COLOR="#3A5AFF";
+        const REMOVE_SLOT_COLOR="#FFADAD";
+        const CREATE_SLOT_COLOR="#DDDDDD";
         slots=<%- JSON.stringify(slots) %>;
         function toSQLDate(date)
         {
@@ -30,6 +33,10 @@
         }
         async function createSlot(slot){
             slot={date:"",starttime:"",endtime:"",...slot};
+            let ev=calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+                title:"Meeting",
+                backgroundColor:CREATE_SLOT_COLOR
+            });
             let r=await fetch("/api/create_slot", {
                 method: "POST",
                 headers: {
@@ -38,10 +45,18 @@
                 },
                 body: JSON.stringify({"date":slot.date,"starttime":slot.starttime,"endtime":slot.endtime})
             })
-            let success=await r.json();
-            if(success.success){setTimeout(document.reload,200)}
+            try{
+                let success=await r.json();
+                ev.remove();
+                if(success.success){
+                    createSlotEvent(success.slot);
+                }
+            } catch(err) {
+                ev.remove();
+            }
         }
-        async function deleteSlot(id){
+        async function deleteSlot(id,ev){
+            ev.setProp("backgroundColor",REMOVE_SLOT_COLOR)
             let r=await fetch("/api/delete_slot", {
                 method:"POST",
                 headers:{
@@ -50,14 +65,25 @@
                 },
                 body:JSON.stringify({id:id})
             })
-            let success=await r.json();
-            if(success.success)
-                location.reload();
+            try{let success=await r.json()
+                if(success.success)
+                {
+                    ev.remove();
+                } else {
+                    ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)
+                }
+            } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);return;}
         }
-        window.createSlot=createSlot;
+        function createSlotEvent(slot)
+        {
+            calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+                title:"Meeting",slot_id:slot._id,
+                backgroundColor:DEFAULT_SLOT_COLOR
+            });
+        }
         document.addEventListener("DOMContentLoaded", function() {
             var calendarEl = document.getElementById("calendar");
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            window.calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: "dayGridMonth",
                 headerToolbar: {
                     left: "prev,next today",
@@ -65,7 +91,8 @@
                     right: "dayGridMonth,timeGridWeek,timeGridDay"
                 },
                 eventClick: (info) => {
-                    confirm("Are you sure you want to delete this event?") && deleteSlot(info.event.extendedProps.slot_id)
+                    window.inf=info;
+                    confirm("Are you sure you want to delete this event?") && deleteSlot(info.event.extendedProps.slot_id,info.event)
                 },
                 dateClick: (info) => {
                     createSlot({date:toSQLDate(info.date), starttime: prompt("start time (hh:mm:ss)"), endtime: prompt("end time (hh:mm:ss)")});
@@ -73,12 +100,10 @@
             });
             let slot;
             for(let i=0;i<slots.length;i++) {
-                slot=slots[i];
-                calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
-                    title:"Meeting",slot_id:slot._id
-                });
+                createSlotEvent(slots[i]);
             }
             calendar.render();
         });
+            
     </script>
 </body>

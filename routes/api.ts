@@ -22,14 +22,14 @@ router.get("/get_user", async (req, res) => {
 });
 
 router.post("/create_slot", teacherOnly, async (req: any, res) => {
-    let success = await createSlot({
+    let { success, slot } = await createSlot({
         teacher_id: req.user._id,
         starttime: req.body.starttime,
         endtime: req.body.endtime,
         date: req.body.date,
         description: req.body.description
     })
-    res.json({ success })
+    res.json({ success, slot });
 })
 
 router.post("/delete_slot", teacherOnly, async (req: any, res) => {
