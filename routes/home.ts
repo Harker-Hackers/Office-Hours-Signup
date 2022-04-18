@@ -19,7 +19,11 @@ router.get("/", (req, res) => {
     res.render("home.ejs");
 });
 
-router.post("/", async (req, res) => {
+router.get("/login", (req, res) => {
+    res.render("login.ejs");
+});
+
+router.post("/login", async (req, res) => {
     let googleUser = await getGoogleUser(req.body.credential).catch(() => {
         showError(res, 500);
         res.end();
@@ -58,9 +62,9 @@ router.post("/", async (req, res) => {
         login(req, res, user);
         res.redirect("/student");
     } else if (googleUser.email?.endsWith("@staff.harker.org")) {
-        res.render("home.ejs", { error: "Please use your @harker.org email." });
+        res.render("login.ejs", { error: "Please use your @harker.org email." });
     } else {
-        res.render("home.ejs", { error: "Please signin with your <b>Harker</b> email." });
+        res.render("login.ejs", { error: "Please signin with your <b>Harker</b> email." });
     }
 });
 <<<<<<< HEAD

@@ -6,6 +6,8 @@ import * as routes from "./routes"
 let app = express();
 app.set("view engine", "ejs");
 app.use(require("cookie-parser")());
+
+app.use("/static", express.static(__dirname + "/static"));
 app.use("/", routes.homeRouter);
 app.use("/api", routes.apiRouter);
 app.use("/teacher", routes.teacherRouter);

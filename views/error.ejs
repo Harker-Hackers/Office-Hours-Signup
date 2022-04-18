@@ -1,4 +1,6 @@
-<%- include(`${base}/views/partials/head.ejs`) %>
-<body>
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Whoops!" }) %>
+</head>
+<body class="ms-4 me-4">
     <p>Oops! <b><%- message || "An error occured." %></b></p>
 </body>

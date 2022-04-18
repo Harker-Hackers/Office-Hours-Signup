@@ -1,6 +1,8 @@
-<%- include(`${base}/views/partials/head.ejs`) %>
-<%- include(`${base}/views/partials/calendar.ejs`) %>
-<body>
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Portal" }) %>
+    <%- include(`${base}/views/partials/calendar.ejs`) %>
+</head>
+<body class="ms-4 me-4">
     <h1>Student Home</h1>
     <p>Welcome, <%- name %></p>
     <div id='calendar'></div>
