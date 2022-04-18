@@ -24,10 +24,11 @@ router.get("/login", (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-    let googleUser = await getGoogleUser(req.body.credential).catch(() => {
+    let googleUser = await getGoogleUser(req.body.credential).catch((err) => {
+        console.error(err);
         showError(res, 500);
         res.end();
-    }) as googleUser;
+    });
     if (googleUser == null)
         return res.status(500);
     if (isTeacher(googleUser.email)) {
@@ -44,7 +45,7 @@ router.post("/login", async (req, res) => {
             user = await grabUserByEmail(googleUser.email);
         }
         login(req, res, user);
-        res.redirect("/teacher")
+        res.redirect("/teacher");
     } else if (isStudent(googleUser.email)) {
         let user = await grabUserByEmail(googleUser.email);
         if (user === null) {
@@ -90,5 +91,9 @@ router.get("/student",studentOnly,async (req:any,res)=>{
 });
 =======
 >>>>>>> e2c2de74d4b4ac6616df3d74eeecf86ed1820310
+
+router.get("/logout", async (req, res) => {
+    console.log(req.cookies.jwt)
+})
 
 export default router;
