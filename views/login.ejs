@@ -41,7 +41,7 @@
         });
         let res = await req.json();
         console.log(req.status);
-        if(res.isLoggedIn !== {}) {
+        if(res._id) {
             window.location.replace(`/${res.role}`);
         }
     }
