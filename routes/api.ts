@@ -10,10 +10,10 @@ router.use(express.urlencoded({ extended: true }));
 router.get("/get_user", async (req, res) => {
     let teacher = (await isStoredTeacher(req, res));
     let student = (await isStoredStudent(req, res));
-    if(teacher[0] === 200) {
+    if (teacher[0] === 200) {
         (teacher[1] as Teacher).role = "teacher";
         res.send(teacher[1]);
-    } else if (student[0] === 200){
+    } else if (student[0] === 200) {
         (student[1] as Student).role = "student";
         res.send(student[1]);
     } else {
