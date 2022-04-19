@@ -43,17 +43,17 @@ export function login(req: any, res: any, user: any) {
 export async function teacherOnly(req: any, res: any, n: any) {
     const token = req.cookies.jwt;
     if (!token) {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
         if (user == null || !user.teacher)
-            return res.sendStatus(403);
+            return res.redirect("/login");;
         req.user = user;
         refresh(req, res, n);
     } catch {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
 }
 
@@ -76,13 +76,13 @@ export async function isStoredTeacher(req: any, res: any) {
 export async function studentOnly(req: any, res: any, n: any, dontRefresh?: boolean) {
     const token = req.cookies.jwt;
     if (!token) {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
         if (user == null || user.teacher)
-            return res.sendStatus(403);
+            return res.redirect("/login");;
         req.user = user;
         refresh(req, res, n);
         /*
@@ -92,7 +92,7 @@ export async function studentOnly(req: any, res: any, n: any, dontRefresh?: bool
             refresh(req, res, n);
             */
     } catch {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
     //return 200;
 }
@@ -116,16 +116,16 @@ export async function isStoredStudent(req: any, res: any) {
 export async function refresh(req: any, res: any, n: any) {
     const token = req.cookies.jwt;
     if (!token) {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
         if (user == null)
-            return res.sendStatus(403);
+            return res.redirect("/login");;
         login(req, res, user);
         n();
     } catch {
-        return res.sendStatus(403);
+        return res.redirect("/login");;
     }
 }
