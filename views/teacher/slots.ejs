@@ -35,8 +35,11 @@
             slot={date:"",starttime:"",endtime:"",...slot};
             let ev=calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
                 title:"Meeting",
-                backgroundColor:CREATE_SLOT_COLOR
+                backgroundColor:CREATE_SLOT_COLOR,
+                borderColor:CREATE_SLOT_COLOR,
+                display:"block"
             });
+            try{
             let r=await fetch("/api/create_slot", {
                 method: "POST",
                 headers: {
@@ -45,7 +48,6 @@
                 },
                 body: JSON.stringify({"date":slot.date,"starttime":slot.starttime,"endtime":slot.endtime})
             })
-            try{
                 let success=await r.json();
                 ev.remove();
                 if(success.success){
@@ -57,28 +59,32 @@
         }
         async function deleteSlot(id,ev){
             ev.setProp("backgroundColor",REMOVE_SLOT_COLOR)
-            let r=await fetch("/api/delete_slot", {
+            ev.setProp("borderColor",REMOVE_SLOT_COLOR)
+            try
+            {
+                let r=await fetch("/api/delete_slot", {
                 method:"POST",
                 headers:{
                     "Accept":"application/json",
                     "Content-Type":"application/json"
                 },
                 body:JSON.stringify({id:id})
-            })
-            try{let success=await r.json()
+                })
+                let success=await r.json()
                 if(success.success)
                 {
                     ev.remove();
                 } else {
-                    ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)
+                    3/0
                 }
-            } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);return;}
+            } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR);return;}
         }
         function createSlotEvent(slot)
         {
             calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
                 title:"Meeting",slot_id:slot._id,
-                backgroundColor:DEFAULT_SLOT_COLOR
+                backgroundColor:DEFAULT_SLOT_COLOR,
+                display:"block"
             });
         }
         document.addEventListener("DOMContentLoaded", function() {
