@@ -35,7 +35,7 @@
     function handleCredentialResponse(response) {
         console.log(`Encoded JWT ID token: ${response.credential}`);
     }
-    window.onload = async () => {
+    /*window.onload = async () => {
         let req = await fetch("/api/get_user", {
             method: "GET",
         });
@@ -44,6 +44,6 @@
         if(res._id) {
             window.location.replace(`/${res.role}`);
         }
-    }
+    }*/ //inefficient (constant pings bad, we can make this later);
     </script>
 </body>

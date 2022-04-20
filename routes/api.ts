@@ -1,28 +1,18 @@
 import express from "express";
 import { Student, Teacher } from "../types";
-import { teacherOnly, studentOnly, isStoredTeacher, isStoredStudent } from "../util/authorizationHandler";
+import { teacherSlotOnly, studentSlotOnly, isStoredTeacher, isStoredStudent } from "../util/authorizationHandler";
 import { addStudentToMeeting, createSlot, deleteSlot, getSlots, IDQuery, StudentAvailableQuery, StudentQuery } from "../util/slots";
 import { addTeachersToStudent, setStudentTeachers } from "../util/student";
+import { isTeacher } from "../util/userHandler";
 
 let router = express.Router();
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 router.get("/get_user", async (req, res) => {
-    let teacher = (await isStoredTeacher(req, res));
-    let student = (await isStoredStudent(req, res));
-    if (teacher[0] === 200) {
-        (teacher[1] as Teacher).role = "teacher";
-        res.send(teacher[1]);
-    } else if (student[0] === 200) {
-        (student[1] as Student).role = "student";
-        res.send(student[1]);
-    } else {
-        res.send({});
-    }
 });
 
-router.post("/create_slot", teacherOnly, async (req: any, res) => {
+router.post("/create_slot", teacherSlotOnly, async (req: any, res) => {
     let { success, slot } = await createSlot({
         teacher_id: req.user._id,
         starttime: req.body.starttime,
@@ -33,22 +23,22 @@ router.post("/create_slot", teacherOnly, async (req: any, res) => {
     res.json({ success, slot });
 })
 
-router.post("/delete_slot", teacherOnly, async (req: any, res) => {
+router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
     let success = await deleteSlot({ _id: req.body.id });
     res.json({ success });
 })
 
-router.post("/add_teacher",studentOnly, async (req:any, res) => {
+router.post("/add_teacher",studentSlotOnly, async (req:any, res) => {
     let success = await addTeachersToStudent(req.user,req.body.teachers)
     res.json({ success });
 })
 
-router.post("/change_teachers",studentOnly,async(req:any,res)=>{
+router.post("/change_teachers",studentSlotOnly,async(req:any,res)=>{
     let success = await setStudentTeachers(req.user,req.body.teachers);
     res.json({ success });
 })
 
-router.post("/join_meeting",studentOnly,async(req:any,res)=>{
+router.post("/join_meeting",studentSlotOnly,async(req:any,res)=>{
     try{
         let slot = await getSlots(new StudentAvailableQuery(req.user.email), new IDQuery(req.body.id))
         if(!slot||!slot.results||slot.results.length==0){throw new Error("Slot wasn't found")}
@@ -59,7 +49,7 @@ router.post("/join_meeting",studentOnly,async(req:any,res)=>{
     }
 })
 
-router.post("/leave_meeting",studentOnly,async(req:any,res)=>{
+router.post("/leave_meeting",studentSlotOnly,async(req:any,res)=>{
     try{
         let slot = await getSlots(new StudentQuery(req.user.email), new IDQuery(req.body.id))
         if(!slot||!slot.results||slot.results.length==0){throw new Error("Slot wasn't found")}

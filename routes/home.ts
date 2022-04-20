@@ -1,6 +1,6 @@
 import express from "express";
 import { googleUser } from "../types";
-import { grabUserByEmail, login, teacherOnly } from "../util/authorizationHandler";
+import { grabUserByEmail, login, teacherSlotOnly } from "../util/authorizationHandler";
 import getGoogleUser from '../util/getGoogleUser';
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
@@ -38,9 +38,8 @@ router.post("/login", async (req, res) => {
                 given_name: googleUser.given_name,
                 family_name: googleUser.family_name
             });
-            user = await grabUserByEmail(googleUser.email);
         }
-        login(req, res, user);
+        login(req, res, {email:googleUser.email});
         res.redirect("/teacher");
     } else if (isStudent(googleUser.email)) {
         let user = await grabUserByEmail(googleUser.email);
@@ -54,9 +53,8 @@ router.post("/login", async (req, res) => {
                 family_name: googleUser.family_name,
                 teachers: []
             });
-            user = await grabUserByEmail(googleUser.email);
         }
-        login(req, res, user);
+        login(req, res, {email:googleUser.email});
         res.redirect("/student");
     } else if (googleUser.email?.endsWith("@staff.harker.org")) {
         res.render("login.ejs", { error: "Please use your @harker.org email." });

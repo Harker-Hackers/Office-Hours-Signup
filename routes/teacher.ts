@@ -1,4 +1,4 @@
-import { teacherOnly } from "../util/authorizationHandler";
+import { teacherOnly, teacherSlotOnly } from "../util/authorizationHandler";
 import express from "express";
 
 let router = express.Router();
@@ -9,7 +9,7 @@ router.get("/", teacherOnly, async (req: any, res) => {
     res.render("teacher/home.ejs", req.user);
 });
 
-router.get("/slots", teacherOnly, async (req: any, res) => {
+router.get("/slots", teacherSlotOnly, async (req: any, res) => {
     res.render("teacher/slots.ejs", req.user);
 });
 

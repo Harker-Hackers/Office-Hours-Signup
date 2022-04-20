@@ -13,11 +13,13 @@ export async function grabUserByEmail(email?: string) {
         let j = await getTeacher(email) as any;
         if (j.results.length === 0)
             return null;
+        j.results[0].teacher=true;
         return(j.results[0]);
     } else if (isStudent(email)) {
         let j = await getStudent(email) as any;
         if (j.results.length === 0)
             return null;
+        j.results[0].teacher=false;
         return(j.results[0]);
     }
     return null;
@@ -53,7 +55,7 @@ export function login(req: any, res: any, user: any) {
     return res.cookie("jwt", token, { maxAge: 3600000 });
 }
 
-export async function teacherOnly(req: any, res: any, n: any) {
+export async function teacherSlotOnly(req: any, res: any, n: any) {
     const token = req.cookies.jwt;
     if (!token) {
         return res.redirect("/login");;
@@ -64,6 +66,23 @@ export async function teacherOnly(req: any, res: any, n: any) {
         if (user == null || !user.teacher)
             return res.redirect("/login");;
         req.user = await grabTeacherSlots(user);
+        refresh(req, res, n);
+    } catch {
+        return res.redirect("/login");;
+    }
+}
+
+export async function teacherOnly(req: any, res: any, n: any) {
+    const token = req.cookies.jwt;
+    if (!token) {
+        return res.redirect("/login");;
+    }
+    try {
+        const data = jwt.verify(token, jwtKey);
+        let user = await grabUserByEmail(data.u);
+        if (user == null || !user.teacher)
+            return res.redirect("/login");;
+        req.user = user;
         refresh(req, res, n);
     } catch {
         return res.redirect("/login");;
@@ -86,7 +105,7 @@ export async function isStoredTeacher(req: any, res: any) {
     }
 }
 
-export async function studentOnly(req: any, res: any, n: any) {
+export async function studentSlotOnly(req: any, res: any, n: any) {
     const token = req.cookies.jwt;
     if (!token) {
         return res.redirect("/login");;
@@ -97,6 +116,24 @@ export async function studentOnly(req: any, res: any, n: any) {
         if (user == null || user.teacher)
             return res.redirect("/login");;
         req.user = await grabStudentSlots(user);
+        refresh(req, res, n);
+    } catch {
+        return res.redirect("/login");;
+    }
+    //return 200;
+}
+
+export async function studentOnly(req: any, res: any, n: any) {
+    const token = req.cookies.jwt;
+    if (!token) {
+        return res.redirect("/login");;
+    }
+    try {
+        const data = jwt.verify(token, jwtKey);
+        let user = await grabUserByEmail(data.u);
+        if (user == null || user.teacher)
+            return res.redirect("/login");;
+        req.user = user;
         refresh(req, res, n);
     } catch {
         return res.redirect("/login");;
