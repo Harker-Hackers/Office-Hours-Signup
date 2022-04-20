@@ -13,21 +13,34 @@ export async function grabUserByEmail(email?: string) {
         let j = await getTeacher(email) as any;
         if (j.results.length === 0)
             return null;
-        let slots = await getSlots(new TeacherQuery(j.results[0]._id));
-        return { "teacher": true, ...j.results[0], "slots": slots.results } as Teacher;
+        return(j.results[0]);
     } else if (isStudent(email)) {
         let j = await getStudent(email) as any;
         if (j.results.length === 0)
             return null;
-        let slots = await getSlots(new StudentQuery(j.results[0].email));
-        let teacher_slots;
-        if (j.results[0].teachers.length > 0)
-            teacher_slots = (await getSlots(new MultiTeacherQuery(j.results[0].teachers), new StudentAvailableQuery(email))).results;
-        else
-            teacher_slots = [];
-        return { "teacher": false, "slots": slots.results, teacher_slots: teacher_slots, ...j.results[0] } as Student;
+        return(j.results[0]);
     }
     return null;
+}
+
+async function grabTeacherSlots(user:any)
+{
+    let slots = await getSlots(new TeacherQuery(user._id));
+    user["teacher"]=true;
+    user["slots"]=slots.results
+    return user as Teacher;
+}
+
+async function grabStudentSlots(user:any)
+{
+    let teacher_slots;
+    if (user.teachers.length > 0)
+        teacher_slots = (await getSlots(new MultiTeacherQuery(user.teachers), new StudentAvailableQuery(user.email))).results;
+    else
+        teacher_slots = [];
+    user.teacher=false;user.slots=[];user.teacher_slots=teacher_slots;
+    return user as Student;
+
 }
 
 function generateAccessToken(username: string) {
@@ -50,7 +63,7 @@ export async function teacherOnly(req: any, res: any, n: any) {
         let user = await grabUserByEmail(data.u);
         if (user == null || !user.teacher)
             return res.redirect("/login");;
-        req.user = user;
+        req.user = await grabTeacherSlots(user);
         refresh(req, res, n);
     } catch {
         return res.redirect("/login");;
@@ -83,7 +96,7 @@ export async function studentOnly(req: any, res: any, n: any) {
         let user = await grabUserByEmail(data.u);
         if (user == null || user.teacher)
             return res.redirect("/login");;
-        req.user = user;
+        req.user = await grabStudentSlots(user);
         refresh(req, res, n);
     } catch {
         return res.redirect("/login");;
