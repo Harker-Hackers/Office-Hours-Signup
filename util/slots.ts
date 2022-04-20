@@ -27,7 +27,7 @@ export const createSlot = async (slotData: { date?: string, starttime?: string, 
     slotData.student_email = slotData.student_email || "";
     let slot;
     if (await canCreateSlot(slotData as Slot)) {
-        slot={
+        slot = {
             date: slotData.date,
             starttime: slotData.starttime,
             endtime: slotData.endtime,
@@ -37,9 +37,9 @@ export const createSlot = async (slotData: { date?: string, starttime?: string, 
         }
         let success = await addDocs("slots", [slot]);
         if (success.data != undefined && !success.data[0].error)
-            return {success:true, slot:{...slot,_id:success.data[0]._id}}
+            return { success: true, slot: { ...slot, _id: success.data[0]._id } }
     }
-    return {success:false};
+    return { success: false };
 }
 
 export const deleteSlot = async (slot: { _id: string }) => {
@@ -57,14 +57,14 @@ export const getSlotById = (id: string) => {
     })
 }
 
-export const editSlot = async(id:string,patches:any) => {
+export const editSlot = async (id: string, patches: any) => {
     return await editDocs("slots", [{
         _id: id, patch: patches
     }])
 }
 
-export const addStudentToMeeting = async(student:string,slot:string)=>{
-    return await editSlot(slot,[{
+export const addStudentToMeeting = async (student: string, slot: string) => {
+    return await editSlot(slot, [{
         op: 'REPLACE',
         path: '/student_email',
         value: student
@@ -227,11 +227,11 @@ export class StudentAvailableQuery extends MySlotQuery {
 }
 
 export class IDQuery extends MySlotQuery {
-    constructor(id:string) {
+    constructor(id: string) {
         super(`_id = :id`, [{
-            name:"id",
-            type:"string",
-            value:id
+            name: "id",
+            type: "string",
+            value: id
         }])
     }
 }

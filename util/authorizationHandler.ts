@@ -13,34 +13,32 @@ export async function grabUserByEmail(email?: string) {
         let j = await getTeacher(email) as any;
         if (j.results.length === 0)
             return null;
-        j.results[0].teacher=true;
-        return(j.results[0]);
+        j.results[0].teacher = true;
+        return (j.results[0]);
     } else if (isStudent(email)) {
         let j = await getStudent(email) as any;
         if (j.results.length === 0)
             return null;
-        j.results[0].teacher=false;
-        return(j.results[0]);
+        j.results[0].teacher = false;
+        return (j.results[0]);
     }
     return null;
 }
 
-async function grabTeacherSlots(user:any)
-{
+async function grabTeacherSlots(user: any) {
     let slots = await getSlots(new TeacherQuery(user._id));
-    user["teacher"]=true;
-    user["slots"]=slots.results
+    user["teacher"] = true;
+    user["slots"] = slots.results
     return user as Teacher;
 }
 
-async function grabStudentSlots(user:any)
-{
+async function grabStudentSlots(user: any) {
     let teacher_slots;
     if (user.teachers.length > 0)
         teacher_slots = (await getSlots(new MultiTeacherQuery(user.teachers), new StudentAvailableQuery(user.email))).results;
     else
         teacher_slots = [];
-    user.teacher=false;user.slots=[];user.teacher_slots=teacher_slots;
+    user.teacher = false; user.slots = []; user.teacher_slots = teacher_slots;
     return user as Student;
 
 }
@@ -97,7 +95,7 @@ export async function isStoredTeacher(req: any, res: any) {
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
-        if (user == null || !user.teacher || user==undefined || !user)
+        if (user == null || !user.teacher || user == undefined || !user)
             return [500, {}]
         return [200, user];
     } catch {
@@ -138,7 +136,6 @@ export async function studentOnly(req: any, res: any, n: any) {
     } catch {
         return res.redirect("/login");;
     }
-    //return 200;
 }
 
 export async function isStoredStudent(req: any, res: any) {

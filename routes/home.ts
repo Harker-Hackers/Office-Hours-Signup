@@ -39,7 +39,7 @@ router.post("/login", async (req, res) => {
                 family_name: googleUser.family_name
             });
         }
-        login(req, res, {email:googleUser.email});
+        login(req, res, { email: googleUser.email });
         res.redirect("/teacher");
     } else if (isStudent(googleUser.email)) {
         let user = await grabUserByEmail(googleUser.email);
@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
                 teachers: []
             });
         }
-        login(req, res, {email:googleUser.email});
+        login(req, res, { email: googleUser.email });
         res.redirect("/student");
     } else if (googleUser.email?.endsWith("@staff.harker.org")) {
         res.render("login.ejs", { error: "Please use your @harker.org email." });
@@ -63,14 +63,14 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.get("/test_student",async (req,res) => {
-    login(req,res,await grabUserByEmail("25aaravb@students.harker.org"))
-    res.json({"success":true})
+router.get("/test_student", async (req, res) => {
+    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"))
+    res.json({ "success": true })
 })
 
-router.get("/test_teacher",async (req,res) => {
-    login(req,res,await grabUserByEmail("25aaravb@students.harker.org"))
-    res.json({"success":true})
+router.get("/test_teacher", async (req, res) => {
+    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"))
+    res.json({ "success": true })
 })
 
 router.get("/logout", async (req, res) => {
