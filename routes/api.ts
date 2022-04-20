@@ -2,6 +2,7 @@ import express from "express";
 import { Student, Teacher } from "../types";
 import { teacherOnly, studentOnly, isStoredTeacher, isStoredStudent } from "../util/authorizationHandler";
 import { createSlot, deleteSlot } from "../util/slots";
+import { addTeachersToStudent, setStudentTeachers } from "../util/student";
 
 let router = express.Router();
 router.use(express.json());
@@ -37,11 +38,14 @@ router.post("/delete_slot", teacherOnly, async (req: any, res) => {
     res.json({ success });
 })
 
-router.get("/delete_slots", teacherOnly, (req: any, res) => {
-    let slots = req.user.slots;
-    for (let i = 0; i < slots.length; i++) {
-        deleteSlot(slots[i]);
-    }
+router.post("/add_teacher",studentOnly, async (req:any, res) => {
+    let success = await addTeachersToStudent(req.user,req.body.teachers)
+    res.json({ success });
+})
+
+router.post("/change_teachers",studentOnly,async(req:any,res)=>{
+    let success = await setStudentTeachers(req.user,req.body.teachers);
+    res.json({ success });
 })
 
 export default router;

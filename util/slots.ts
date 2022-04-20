@@ -200,7 +200,13 @@ export class NullQuery extends MySlotQuery {
 
 export class StudentQuery extends MySlotQuery {
     constructor(student: string) {
-        super(`student_id = :student`, [{ name: "student", type: "string", value: student }]);
+        super(`student_email = :student`, [{ name: "student", type: "string", value: student }]);
+    }
+}
+
+export class StudentAvailableQuery extends MySlotQuery {
+    constructor(student: string) {
+        super(`(student_email = :student OR student_email = '')`, [{ name: "student", type: "string", value: student }]);
     }
 }
 
@@ -220,7 +226,8 @@ export class StartDateTimeOrder extends MySlotQuery {
 
 export const SlotQuery = {
     TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery,
-    StudentQuery, MultiTeacherQuery, StartTimeOrder, StartDateTimeOrder
+    StudentQuery, MultiTeacherQuery, StudentAvailableQuery,
+    StartTimeOrder, StartDateTimeOrder,
 }
 
 /**

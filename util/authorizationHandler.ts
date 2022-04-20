@@ -2,7 +2,7 @@ import { Student, Teacher, Slot } from "../types";
 import { isTeacher, isStudent } from "../util/userHandler";
 import { getTeacher } from "../util/teacher";
 import { getStudent } from "../util/student";
-import { getSlots, TeacherQuery, StudentQuery, MultiTeacherQuery } from "./slots";
+import { getSlots, TeacherQuery, StudentQuery, MultiTeacherQuery, StudentAvailableQuery } from "./slots";
 const jwt = require("jsonwebtoken")
 const jwtKey = require("../config.json").jwtKey;
 
@@ -22,7 +22,7 @@ export async function grabUserByEmail(email?: string) {
         let slots = await getSlots(new StudentQuery(j.results[0]._id));
         let teacher_slots;
         if (j.results[0].teachers.length > 0)
-            teacher_slots = (await getSlots(new MultiTeacherQuery(j.results[0].teachers))).results;
+            teacher_slots = (await getSlots(new MultiTeacherQuery(j.results[0].teachers), new StudentAvailableQuery(email))).results;
         else
             teacher_slots = [];
         return { "teacher": false, "slots": slots.results, teacher_slots: teacher_slots, ...j.results[0] } as Student;
@@ -65,7 +65,7 @@ export async function isStoredTeacher(req: any, res: any) {
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
-        if (user == null || !user.teacher)
+        if (user == null || !user.teacher || user==undefined || !user)
             return [500, {}]
         return [200, user];
     } catch {
@@ -73,7 +73,7 @@ export async function isStoredTeacher(req: any, res: any) {
     }
 }
 
-export async function studentOnly(req: any, res: any, n: any, dontRefresh?: boolean) {
+export async function studentOnly(req: any, res: any, n: any) {
     const token = req.cookies.jwt;
     if (!token) {
         return res.sendStatus(403);
@@ -81,16 +81,10 @@ export async function studentOnly(req: any, res: any, n: any, dontRefresh?: bool
     try {
         const data = jwt.verify(token, jwtKey);
         let user = await grabUserByEmail(data.u);
-        if (user == null || user.teacher)
+        if (user == null || user.teacher || user==undefined || !user)
             return res.sendStatus(403);
         req.user = user;
         refresh(req, res, n);
-        /*
-        if(dontRefresh === true)
-            return [200, user];
-        else
-            refresh(req, res, n);
-            */
     } catch {
         return res.sendStatus(403);
     }

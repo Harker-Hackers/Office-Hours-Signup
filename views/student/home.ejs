@@ -1,24 +1,82 @@
 <head>
     <%- include(`${base}/views/partials/head.ejs`, { title: "Portal" }) %>
-    <%- include(`${base}/views/partials/calendar.ejs`) %>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
 </head>
 <body class="ms-4 me-4">
     <h1>Student Home</h1>
-    <p>Welcome, <%- name %></p>
     <div id='calendar'></div>
     <script>
+        const DEFAULT_SLOT_COLOR="#3A5AFF";
+        const REMOVE_SLOT_COLOR="#FFADAD";
+        const CREATE_SLOT_COLOR="#DDDDDD";
         let my_slots=<%- JSON.stringify(slots) %>;
         let teacher_slots=<%- JSON.stringify(teacher_slots) %>;
+        let teachers=<%- JSON.stringify(teachers) %>
+        async function addTeacher(slot){
+            try{
+                let r=await fetch("/api/add_teacher", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"teachers":[prompt("Teacher ID: ")]})
+                })
+                let success=await r.json();
+            } catch(err) {
+                ev.remove();
+            }
+        }
+        function showSlots(teacher_id)
+        {
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.teacher_id==teacher_id)
+                    ev.setProp("display","auto");
+                else
+                    ev.setProp("display","none")
+            })
+        }
+        async function signMeeting(ev)
+        {
+            try {
+                let r = await fetch("/api/join_meeting", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"slot_id":ev.extendedProps.slot_id})
+                })
+            }
+        }
+        function createSlotEvent(slot)
+        {
+            calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+                title:"Meeting",slot_id:slot._id,teacher_id:slot.teacher_id,
+                backgroundColor:DEFAULT_SLOT_COLOR,student_email:slot.student_email
+            });
+        }
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            window.calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                eventClick: (info) => {
+                    let ev=info.event;
+                    if(ev.extendedProps.student_email=="")
+                        confirm("Do you want to sign up for this meeting?")&&signMeeting(info.event);
+                    else
+                        confirm("Do you want to cancel this meeting?")&&cancelMeeting(info.event);
                 }
             });
+            for(let i=0;i<teacher_slots.length;i++) {
+                createSlotEvent(teacher_slots[i]);
+            }
             calendar.render();
         });
     </script>
