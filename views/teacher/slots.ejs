@@ -75,7 +75,7 @@
                 {
                     ev.remove();
                 } else {
-                    3/0
+                    throw new Error("WHOOPS");
                 }
             } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR);return;}
         }

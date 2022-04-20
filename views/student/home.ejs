@@ -12,7 +12,8 @@
         const CREATE_SLOT_COLOR="#DDDDDD";
         let my_slots=<%- JSON.stringify(slots) %>;
         let teacher_slots=<%- JSON.stringify(teacher_slots) %>;
-        let teachers=<%- JSON.stringify(teachers) %>
+        let teachers=<%- JSON.stringify(teachers) %>;
+        const email="<%- email %>";
         async function addTeacher(slot){
             try{
                 let r=await fetch("/api/add_teacher", {
@@ -31,7 +32,7 @@
         function showSlots(teacher_id)
         {
             calendar.getEvents().forEach((ev)=>{
-                if(ev.extendedProps.teacher_id==teacher_id)
+                if(ev.extendedProps.teacher_id==teacher_id||(teacher_id==null&&ev.extendedProps.student_email==email))
                     ev.setProp("display","auto");
                 else
                     ev.setProp("display","none")
@@ -40,21 +41,47 @@
         async function signMeeting(ev)
         {
             try {
+                ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)
                 let r = await fetch("/api/join_meeting", {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({"slot_id":ev.extendedProps.slot_id})
+                    body: JSON.stringify({"id":ev.extendedProps.slot_id})
                 })
-            }
+                let success=await r.json();
+                if(success.success)
+                    ev.setExtendedProp("student_email",email)
+                else
+                    throw new Error()
+            } catch(err){ev.setProp("backgroundColor",CREATE_SLOT_COLOR)}
         }
-        function createSlotEvent(slot)
+        async function cancelMeeting(ev)
+        {
+            try{
+                ev.setProp("backgroundColor",CREATE_SLOT_COLOR);
+                let r = await fetch("/api/leave_meeting", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"id":ev.extendedProps.slot_id})
+                })
+                let success=await r.json();
+                if(success)
+                    ev.setExtendedProp("student_email","")
+                else
+                    throw new Error();
+            } catch(err){console.log(err);ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)}
+        }
+        function createSlotEvent(slot,z)
         {
             calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
                 title:"Meeting",slot_id:slot._id,teacher_id:slot.teacher_id,
-                backgroundColor:DEFAULT_SLOT_COLOR,student_email:slot.student_email
+                backgroundColor:(slot.student_email?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR),student_email:slot.student_email,
+                display:z?"auto":"none"
             });
         }
         document.addEventListener('DOMContentLoaded', function() {
@@ -75,7 +102,7 @@
                 }
             });
             for(let i=0;i<teacher_slots.length;i++) {
-                createSlotEvent(teacher_slots[i]);
+                createSlotEvent(teacher_slots[i],true);
             }
             calendar.render();
         });

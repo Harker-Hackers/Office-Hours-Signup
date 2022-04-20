@@ -1,7 +1,7 @@
 import express from "express";
 import { Student, Teacher } from "../types";
 import { teacherOnly, studentOnly, isStoredTeacher, isStoredStudent } from "../util/authorizationHandler";
-import { createSlot, deleteSlot } from "../util/slots";
+import { addStudentToMeeting, createSlot, deleteSlot, getSlots, IDQuery, StudentAvailableQuery, StudentQuery } from "../util/slots";
 import { addTeachersToStudent, setStudentTeachers } from "../util/student";
 
 let router = express.Router();
@@ -46,6 +46,28 @@ router.post("/add_teacher",studentOnly, async (req:any, res) => {
 router.post("/change_teachers",studentOnly,async(req:any,res)=>{
     let success = await setStudentTeachers(req.user,req.body.teachers);
     res.json({ success });
+})
+
+router.post("/join_meeting",studentOnly,async(req:any,res)=>{
+    try{
+        let slot = await getSlots(new StudentAvailableQuery(req.user.email), new IDQuery(req.body.id))
+        if(!slot||!slot.results||slot.results.length==0){throw new Error("Slot wasn't found")}
+        let success = await addStudentToMeeting(req.user.email,slot.results[0]._id);
+        res.json({success:(success.data != undefined && !success.data[0].error)})
+    } catch(err){
+        res.json({success:false});
+    }
+})
+
+router.post("/leave_meeting",studentOnly,async(req:any,res)=>{
+    try{
+        let slot = await getSlots(new StudentQuery(req.user.email), new IDQuery(req.body.id))
+        if(!slot||!slot.results||slot.results.length==0){throw new Error("Slot wasn't found")}
+        let success = await addStudentToMeeting("",slot.results[0]._id);
+        res.json({success:(success.data != undefined && !success.data[0].error)})
+    } catch(err){
+        res.json({success:false});
+    }
 })
 
 export default router;

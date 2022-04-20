@@ -1,5 +1,5 @@
 import { QueryCallback, Slot } from "../types";
-import { addDocs, query, rmDocs } from "../db";
+import { addDocs, editDocs, query, rmDocs } from "../db";
 import { OrgPaymentMethodResponse, QueryResponse } from "@rockset/client/dist/codegen/api";
 
 
@@ -56,6 +56,21 @@ export const getSlotById = (id: string) => {
         }, resolve);
     })
 }
+
+export const editSlot = async(id:string,patches:any) => {
+    return await editDocs("slots", [{
+        _id: id, patch: patches
+    }])
+}
+
+export const addStudentToMeeting = async(student:string,slot:string)=>{
+    return await editSlot(slot,[{
+        op: 'REPLACE',
+        path: '/student_email',
+        value: student
+    }])
+}
+
 /*
 export const getSlotsByTeacherId = (id: number) => {
     return new Promise((resolve,reject)=>{
@@ -94,6 +109,7 @@ class MySlotQuery {
         return "select * from \"office-hours\".slots " + (this.query == "" ? "" : "where " + this.query);
     }
     get() {
+        //console.log(this.construct_query())
         return new Promise<QueryResponse>((resolve, reject) => {
             query({
                 query: this.construct_query(),
@@ -210,6 +226,16 @@ export class StudentAvailableQuery extends MySlotQuery {
     }
 }
 
+export class IDQuery extends MySlotQuery {
+    constructor(id:string) {
+        super(`_id = :id`, [{
+            name:"id",
+            type:"string",
+            value:id
+        }])
+    }
+}
+
 export class StartTimeOrder extends MySlotQuery {
     constructor() {
         super(`order by CAST(starttime as time)`, []);
@@ -224,9 +250,9 @@ export class StartDateTimeOrder extends MySlotQuery {
     }
 }
 
-export const SlotQuery = {
+export const SlotUtil = {
     TimeRangeQuery, DateQuery, TeacherQuery, NullQuery, DateTimeRangeQuery,
-    StudentQuery, MultiTeacherQuery, StudentAvailableQuery,
+    StudentQuery, MultiTeacherQuery, StudentAvailableQuery, IDQuery,
     StartTimeOrder, StartDateTimeOrder,
 }
 

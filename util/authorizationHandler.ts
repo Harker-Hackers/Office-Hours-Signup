@@ -19,7 +19,7 @@ export async function grabUserByEmail(email?: string) {
         let j = await getStudent(email) as any;
         if (j.results.length === 0)
             return null;
-        let slots = await getSlots(new StudentQuery(j.results[0]._id));
+        let slots = await getSlots(new StudentQuery(j.results[0].email));
         let teacher_slots;
         if (j.results[0].teachers.length > 0)
             teacher_slots = (await getSlots(new MultiTeacherQuery(j.results[0].teachers), new StudentAvailableQuery(email))).results;
