@@ -1,7 +1,11 @@
 import express from "express";
 import { googleUser } from "../types";
-import { grabUserByEmail, login, teacherSlotOnly } from "../util/authorizationHandler";
-import getGoogleUser from '../util/getGoogleUser';
+import {
+    grabUserByEmail,
+    login,
+    teacherSlotOnly,
+} from "../util/authorizationHandler";
+import getGoogleUser from "../util/getGoogleUser";
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";
 import { createStudent } from "../util/student";
@@ -25,8 +29,7 @@ router.post("/login", async (req, res) => {
         showError(res, 500);
         res.end();
     });
-    if (googleUser == null)
-        return res.status(500);
+    if (googleUser == null) return res.status(500);
     if (isTeacher(googleUser.email)) {
         let user = await grabUserByEmail(googleUser.email);
         if (user === null) {
@@ -36,7 +39,7 @@ router.post("/login", async (req, res) => {
                 name: googleUser.name,
                 picture: googleUser.picture,
                 given_name: googleUser.given_name,
-                family_name: googleUser.family_name
+                family_name: googleUser.family_name,
             });
         }
         login(req, res, { email: googleUser.email });
@@ -51,30 +54,34 @@ router.post("/login", async (req, res) => {
                 picture: googleUser.picture,
                 given_name: googleUser.given_name,
                 family_name: googleUser.family_name,
-                teachers: []
+                teachers: [],
             });
         }
         login(req, res, { email: googleUser.email });
         res.redirect("/student");
     } else if (googleUser.email?.endsWith("@staff.harker.org")) {
-        res.render("login.ejs", { error: "Please use your @harker.org email." });
+        res.render("login.ejs", {
+            error: "Please use your @harker.org email.",
+        });
     } else {
-        res.render("login.ejs", { error: "Please signin with your <b>Harker</b> email." });
+        res.render("login.ejs", {
+            error: "Please signin with your <b>Harker</b> email.",
+        });
     }
 });
 
 router.get("/test_student", async (req, res) => {
-    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"))
-    res.json({ "success": true })
-})
+    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"));
+    res.json({ success: true });
+});
 
 router.get("/test_teacher", async (req, res) => {
-    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"))
-    res.json({ "success": true })
-})
+    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"));
+    res.json({ success: true });
+});
 
 router.get("/logout", async (req, res) => {
-    console.log(req.cookies.jwt)
-})
+    console.log(req.cookies.jwt);
+});
 
 export default router;

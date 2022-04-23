@@ -43,9 +43,9 @@
         </div>
     <%- include(`${base}/views/partials/modal/close.ejs`) %>    
 
-    <%- include(`${base}/views/partials/modal/open.ejs`, { id: "delete-prompt-popup" }) %>
+    <%- include(`${base}/views/partials/modal/open.ejs`, { id: "edit-prompt-popup" }) %>
         <div class="modal-header">
-            <h5 class="w-100 text-center modal-title" id="delete-prompt-popup-label">Create a Meeting Slot</h5>
+            <h5 class="w-100 text-center modal-title" id="edit-prompt-popup-label">Create a Meeting Slot</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -145,7 +145,7 @@
                 },
                 eventClick: (info) => {
                     window.info = info;
-                    $("#delete-prompt-popup").modal("show");
+                    $("#edit-prompt-popup").modal("show");
                 },
                 dateClick: (info) => {
                     window.info = info;
@@ -183,7 +183,7 @@
 
         document.getElementById("delete-close-prompt-btn").addEventListener("click", () => {
             info = window.info;
-            $("#delete-prompt-popup").modal("hide");
+            $("#edit-prompt-popup").modal("hide");
             deleteSlot(info.event.extendedProps.slot_id, info.event)
         });
     </script>
