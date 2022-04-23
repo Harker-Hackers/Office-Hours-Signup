@@ -11,9 +11,11 @@ jobs:
               with:
                 ref: ${{ github.head_ref }}
                 fetch-depth: 0
+                persist-credentials: false
             - name: Prettier Action
               uses: creyD/prettier_action@v4.2
               with:
                 prettier_options: . -w
                 commit_message: Format code
                 only_changed: True
+                github_token: ${{ secrets.ACCESS_TOKEN }}
