@@ -78,7 +78,7 @@
         }
         function createSlotEvent(slot,z)
         {
-            calendar.addEvent({start:slot.date+"T"+slot.starttime,end:slot.date+"T"+slot.endtime,
+            calendar.addEvent({start:slot.date+"T"+slot.startTime,end:slot.date+"T"+slot.endTime,
                 title:"Meeting",slot_id:slot._id,teacher_id:slot.teacher_id,
                 backgroundColor:(slot.student_email?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR),student_email:slot.student_email,
                 display:z?"auto":"none"

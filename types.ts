@@ -45,8 +45,8 @@ export interface DatabaseItem {
 
 export interface Slot extends DatabaseItem {
     date: string,
-    starttime: string,
-    endtime: string,
+    startTime: string,
+    endTime: string,
     description: string,
     teacher_id: string,
     student_email: string,

@@ -16,21 +16,21 @@ export function toSQLTime(date: Date) {
 }
 
 export const canCreateSlot = async (slotData: Slot) => {
-    let sl = await getSlots(new TeacherQuery(slotData.teacher_id), new DateTimeRangeQuery(slotData.date, slotData.starttime, slotData.endtime));
-    return sl.results?.length == 0 && Date.parse("1970-01-01 " + slotData.endtime) > Date.parse("1970-01-01 " + slotData.starttime) + 1000 * 300;
+    let sl = await getSlots(new TeacherQuery(slotData.teacher_id), new DateTimeRangeQuery(slotData.date, slotData.startTime, slotData.endTime));
+    return sl.results?.length == 0 && Date.parse("1970-01-01 " + slotData.endTime) > Date.parse("1970-01-01 " + slotData.startTime) + 1000 * 300;
 }
-export const createSlot = async (slotData: { date?: string, starttime?: string, endtime?: string, description?: string, teacher_id: string, student_email?: string }) => {
+export const createSlot = async (slotData: { date?: string, startTime?: string, endTime?: string, description?: string, teacher_id: string, student_email?: string }) => {
     slotData.date = slotData.date || toSQLDate(new Date());
-    slotData.starttime = slotData.starttime || toSQLTime(new Date());
-    slotData.endtime = slotData.endtime || toSQLTime(new Date());
+    slotData.startTime = slotData.startTime || toSQLTime(new Date());
+    slotData.endTime = slotData.endTime || toSQLTime(new Date());
     slotData.description = slotData.description || "";
     slotData.student_email = slotData.student_email || "";
     let slot;
     if (await canCreateSlot(slotData as Slot)) {
         slot = {
             date: slotData.date,
-            starttime: slotData.starttime,
-            endtime: slotData.endtime,
+            startTime: slotData.startTime,
+            endTime: slotData.endTime,
             description: slotData.description,
             teacher_id: slotData.teacher_id,
             student_email: slotData.student_email
@@ -170,7 +170,7 @@ export class TimeRangeQuery extends MySlotQuery {
             mintime = toSQLTime(mintime);
         if (!(typeof (maxtime) == "string"))
             maxtime = toSQLTime(maxtime);
-        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime`,
+        super(`CAST(startTime as time) >= :mintime and CAST(endTime as time) <= :maxtime`,
             [{
                 name: "mintime",
                 type: "time",
@@ -191,7 +191,7 @@ export class DateTimeRangeQuery extends MySlotQuery {
             mintime = toSQLTime(mintime);
         if (!(typeof (maxtime) == "string"))
             maxtime = toSQLTime(maxtime);
-        super(`CAST(starttime as time) >= :mintime and CAST(endtime as time) <= :maxtime and date = :date`,
+        super(`CAST(startTime as time) >= :mintime and CAST(endTime as time) <= :maxtime and date = :date`,
             [{
                 name: "mintime",
                 type: "time",
@@ -238,7 +238,7 @@ export class IDQuery extends MySlotQuery {
 
 export class StartTimeOrder extends MySlotQuery {
     constructor() {
-        super(`order by CAST(starttime as time)`, []);
+        super(`order by CAST(startTime as time)`, []);
         this.is_query = false;
     }
 }

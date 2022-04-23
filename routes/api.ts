@@ -10,13 +10,24 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 router.get("/get_user", async (req, res) => {
+    let teacher = (await isStoredTeacher(req, res));
+    let student = (await isStoredStudent(req, res));
+    if (teacher[0] === 200) {
+        (teacher[1] as Teacher).role = "teacher";
+        res.send(teacher[1]);
+    } else if (student[0] === 200) {
+        (student[1] as Student).role = "student";
+        res.send(student[1]);
+    } else {
+        res.send({});
+    }
 });
 
 router.post("/create_slot", teacherSlotOnly, async (req: any, res) => {
     let { success, slot } = await createSlot({
         teacher_id: req.user._id,
-        starttime: req.body.starttime,
-        endtime: req.body.endtime,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
         date: req.body.date,
         description: req.body.description
     })
