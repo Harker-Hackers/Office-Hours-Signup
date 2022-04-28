@@ -73,6 +73,7 @@
         const DEFAULT_SLOT_COLOR="#3A5AFF";
         const REMOVE_SLOT_COLOR="#FFADAD";
         const CREATE_SLOT_COLOR="#DDDDDD";
+        const BOOKED_SLOT_COLOR="#00E304"
         slots = <%- JSON.stringify(slots) %>;
 
         function toSQLDate(date) {
@@ -141,10 +142,12 @@
             }
         }
         function createSlotEvent(slot) {
+            let col=slot.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR
             return calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
                 title: "Meeting", 
                 slot_id: slot._id,
-                backgroundColor: DEFAULT_SLOT_COLOR,
+                backgroundColor: col,
+                borderColor: col,
                 display: "block",
                 data: slot
             });

@@ -71,7 +71,7 @@ router.post("/login", async (req, res) => {
 });
 
 router.get("/test_student", async (req, res) => {
-    login(req, res, await grabUserByEmail("25aaravb@students.harker.org"));
+    login(req, res, await grabUserByEmail("25aarushv@students.harker.org"));
     res.json({ success: true });
 });
 

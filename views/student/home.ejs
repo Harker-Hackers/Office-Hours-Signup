@@ -12,12 +12,15 @@
             <li onclick="confirm('Do you want to delete this teacher?')&&deleteTeachers(['<%- i %>'])"><a href="#" onclick=""><%- teachers[i] %></a></li>
         <% } %>
     </ul>
-    <select name="teachers" id="tsc_selection" onchange="showSlots(this.value)">
+    <select name="teachers" id="tsc_selection" onchange="showSlots(this.value,true)">
         <option value="" disabled selected>Select a teacher</option>
         <% for(let i in teachers){%>
             <option value="<%- i %>"><%- teachers[i] %></option>
         <% } %>
     </select>
+    <p>Enter Teacher ID to view</p>
+    <input id="viewteacherslots"></input>
+    <button onclick="clearTemp();loadAndShowTeacherSlots(document.getElementById('viewteacherslots').value)">View Other Slots</button>
     <div id='calendar'></div>
     <script>
         const DEFAULT_SLOT_COLOR="#3A5AFF";
@@ -68,18 +71,34 @@
                     "teacher":teacher_id
                 })});
                 let success=await r.json();
-                console.log(success)
-            }catch(err){}
+                return success;
+            }catch(err){return {success:false}}
         }
-        function showSlots(teacher_id)
+        function showSlots(teacher_id,temp)
         {
             calendar.getEvents().forEach((ev)=>{
-                console.log(ev.extendedProps.teacher_id);
-                if(ev.extendedProps.teacher_id==teacher_id||(ev.extendedProps.student_email==email))
-                    ev.setProp("display","auto");
+                if((ev.extendedProps.teacher_id==teacher_id||(ev.extendedProps.student_email==email)))
+                    ev.setProp("display","block");
                 else
                     ev.setProp("display","none")
             })
+        }
+        function clearTemp()
+        {
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.temp)
+                    ev.remove();
+            })
+        }
+        async function loadTeacherSlots(teachid)
+        {
+            let slots=await getTeacherSlots(teachid);
+            (slots.success)&&slots.slots.forEach(k=>createSlotEvent(k,true,{temp:true}));
+        }
+        async function loadAndShowTeacherSlots(teachid)
+        {
+            await loadTeacherSlots(teachid);
+            showSlots(teachid);
         }
         async function signMeeting(ev)
         {
@@ -119,12 +138,15 @@
                     throw new Error();
             } catch(err){console.log(err);ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)}
         }
-        function createSlotEvent(slot,z)
+        function createSlotEvent(slot,z,options)
         {
+            options=!!options?options:{}
+            let col=slot.student_email?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR
             calendar.addEvent({start:slot.date+"T"+slot.startTime,end:slot.date+"T"+slot.endTime,
                 title:"Meeting",slot_id:slot._id,teacher_id:slot.teacher_id,
-                backgroundColor:(slot.student_email?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR),student_email:slot.student_email,
-                display:z?"auto":"none"
+                backgroundColor:(col),borderColor:col,student_email:slot.student_email,
+                display:z?"block":"none",
+                temp:!!options.temp
             });
         }
         document.addEventListener('DOMContentLoaded', function() {
