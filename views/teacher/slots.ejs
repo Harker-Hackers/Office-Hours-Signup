@@ -21,7 +21,7 @@
     
     <%- include(`${base}/views/partials/modal/open.ejs`, { id: "prompt-popup" }) %>
         <div class="modal-header">
-            <h5 class="w-100 text-center modal-title" id="prompt-popup-label">Create a Meeting Slot</h5>
+            <h5 class="w-100 text-center modal-title" id="prompt-popup-label">Create Slot</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -43,17 +43,29 @@
         </div>
     <%- include(`${base}/views/partials/modal/close.ejs`) %>    
 
-    <%- include(`${base}/views/partials/modal/open.ejs`, { id: "edit-prompt-popup" }) %>
+    <%- include(`${base}/views/partials/modal/open.ejs`, { id: "view-prompt-popup" }) %>
         <div class="modal-header">
-            <h5 class="w-100 text-center modal-title" id="edit-prompt-popup-label">Create a Meeting Slot</h5>
+            <h5 class="w-100 text-center modal-title" id="view-prompt-popup-label">View slot</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            Delete this event?
+            <form>
+                <p>Date: </p>
+                <input id="view-prompt-date-input" type="text" disabled></input>
+                <br><br>
+                <p>Start: </p>
+                <input id="view-prompt-start-input" type="time" disabled></input>
+                <br><br>
+                <p>End: </p>
+                <input id="view-prompt-end-input" type="time" disabled></input>
+            </form>
+            <hr>
+            <p id="view-prompt-student-name" class="text-center">No student signed up</p>
+            <p id="meeting-description"></p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button id="delete-close-prompt-btn" type="button" class="btn btn-danger">Delete</button>
+            <button id="delete-btn" type="button" class="btn btn-danger">Delete</button>
         </div>
     <%- include(`${base}/views/partials/modal/close.ejs`) %>    
 
@@ -76,8 +88,9 @@
         }
         async function createSlot(slot) {
             slot = {date: "", startTime: "", endTime: "", ...slot};
-            let ev = calendar.addEvent({start:slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
+            let ev = calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
                 title: "Meeting",
+                data: slot,
                 backgroundColor: CREATE_SLOT_COLOR,
                 borderColor: CREATE_SLOT_COLOR,
                 display: "block"
@@ -104,8 +117,8 @@
             }
         }
         async function deleteSlot(id, ev) {
-            ev.setProp("backgroundColor",REMOVE_SLOT_COLOR)
-            ev.setProp("borderColor",REMOVE_SLOT_COLOR)
+            ev.setProp("backgroundColor", REMOVE_SLOT_COLOR)
+            ev.setProp("borderColor", REMOVE_SLOT_COLOR)
             try {
                 let r = await fetch("/api/delete_slot", {
                     method: "POST",
@@ -129,9 +142,11 @@
         }
         function createSlotEvent(slot) {
             return calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
-                title:"Meeting", slot_id:slot._id,
+                title: "Meeting", 
+                slot_id: slot._id,
                 backgroundColor: DEFAULT_SLOT_COLOR,
-                display: "block"
+                display: "block",
+                data: slot
             });
         }
         document.addEventListener("DOMContentLoaded", function() {
@@ -145,7 +160,12 @@
                 },
                 eventClick: (info) => {
                     window.info = info;
-                    $("#edit-prompt-popup").modal("show");
+                    $("#view-prompt-date-input").val(info.event.extendedProps.data.date);
+                    $("#view-prompt-start-input").val(info.event.extendedProps.data.startTime);
+                    $("#view-prompt-end-input").val(info.event.extendedProps.data.endTime);
+                    $("#view-prompt-student-name").html(info.event.extendedProps.data.student_email ? `<b>Attendee</b>: ${info.event.extendedProps.data.student_email}` : "No student signed up");
+                    $("#meeting-description").html(info.event.extendedProps.data.description ? `<b>Description</b>: ${info.event.extendedProps.data.description}` : "");
+                    $("#view-prompt-popup").modal("show");
                 },
                 dateClick: (info) => {
                     window.info = info;
@@ -155,7 +175,7 @@
                 }
             });
             let slot;
-            for(let i=0;i<slots.length;i++) {
+            for(let i = 0; i < slots.length; i++) {
                 createSlotEvent(slots[i]);
             }
             calendar.render();
@@ -175,16 +195,15 @@
                     });
                     $("#prompt-popup").modal("hide");
                 } catch (err) {
-                    console.log(err);
                     $("#prompt-error").html("An error occured.")
                 }
             }
         });
 
-        document.getElementById("delete-close-prompt-btn").addEventListener("click", () => {
+        document.getElementById("delete-btn").addEventListener("click", () => {
             info = window.info;
-            $("#edit-prompt-popup").modal("hide");
-            deleteSlot(info.event.extendedProps.slot_id, info.event)
+            $("#view-prompt-popup").modal("hide");
+            deleteSlot(info.event.extendedProps.slot_id, info.event);
         });
     </script>
 </body>
