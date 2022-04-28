@@ -144,6 +144,23 @@ class MySlotQuery {
             (this.query == "" ? "" : "where " + this.query)
         );
     }
+    construct_my_query(mcq:string){
+        return (
+            mcq +
+            (this.query == "" ? "" : "where " + this.query)
+        );
+    }
+    get_special(mqb:string) {
+        return new Promise<QueryResponse>((resolve, reject) => {
+            query(
+                {
+                    query: this.construct_my_query(mqb),
+                    parameters: this.parameters,
+                },
+                resolve
+            );
+        });
+    }
     get() {
         //console.log(this.construct_query())
         return new Promise<QueryResponse>((resolve, reject) => {
@@ -333,7 +350,7 @@ export const SlotUtil = {
  * Sample Usage:
  *     slots = await getSlots(new TeacherSlotQuery(342),new DateSlotQuery("2022-04-10"))
  * @param q list of queries
- * @returns promise
+ * @return promise
  */
 export const getSlots = (...q: MySlotQuery[]): Promise<QueryResponse> => {
     let z = null;
@@ -349,4 +366,20 @@ export const getSlots = (...q: MySlotQuery[]): Promise<QueryResponse> => {
     }
     if (z != null) return z.get();
     else return new MySlotQuery("", []).get();
+};
+
+export const getPartialSlots = (r:string[],...q: MySlotQuery[]): Promise<QueryResponse> => {
+    let z = null;
+    for (let i = 0; i < q.length; i++) {
+        if (i != q.length - 1) {
+            if (!q[i].is_query)
+                throw Error(
+                    "QueryConstructionException: order must be the last"
+                );
+        }
+        if (z == null) z = q[i] as MySlotQuery;
+        else z.add(q[i]);
+    }
+    if (z != null) return z.get();
+    else return new MySlotQuery("", []).get_special("select "+r.join(",")+" from \"office-hours\".slots ");
 };

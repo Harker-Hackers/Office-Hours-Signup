@@ -5,15 +5,15 @@ import {
     studentSlotOnly,
     isStoredTeacher,
     isStoredStudent,
+    studentOnly,
 } from "../util/authorizationHandler";
 import {
     addStudentToMeeting,
     createSlot,
     deleteSlot,
     getSlots,
-    IDQuery,
-    StudentAvailableQuery,
-    StudentQuery,
+    SlotUtil,
+    getPartialSlots
 } from "../util/slots";
 import {
     addTeachersToStudent,
@@ -83,8 +83,8 @@ router.post("/delete_teachers", studentSlotOnly, async (req: any, res) => {
 router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
     try {
         let slot = await getSlots(
-            new StudentAvailableQuery(req.user.email),
-            new IDQuery(req.body.id)
+            new SlotUtil.StudentAvailableQuery(req.user.email),
+            new SlotUtil.IDQuery(req.body.id)
         );
         if (!slot || !slot.results || slot.results.length == 0) {
             throw new Error("Slot wasn't found");
@@ -104,8 +104,8 @@ router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
 router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
     try {
         let slot = await getSlots(
-            new StudentQuery(req.user.email),
-            new IDQuery(req.body.id)
+            new SlotUtil.StudentQuery(req.user.email),
+            new SlotUtil.IDQuery(req.body.id)
         );
         if (!slot || !slot.results || slot.results.length == 0) {
             throw new Error("Slot wasn't found");
@@ -118,6 +118,12 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
         res.json({ success: false });
     }
 });
+router.post("/get_teacher_slots",studentOnly,async(req:any,res)=>{
+    try{
+        let teacher_slots=await getPartialSlots(["date","startTime","endTime","description","teacher_id"],new SlotUtil.TeacherQuery(req.body.teacher))
+        res.json({success:true,slots:teacher_slots.results});
+    }catch(err){res.json({success:false})}
+})
 
 export default router;
 

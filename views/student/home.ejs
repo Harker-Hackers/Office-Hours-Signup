@@ -63,6 +63,14 @@
                 let success=await r.json();
             }catch(err){}
         }
+        async function getTeacherSlots(teacher_id){try{
+                let r=await fetch("/api/get_teacher_slots",{method:"POST",headers:{"Accept": "application/json","Content-Type": "application/json"},body:JSON.stringify({
+                    "teacher":teacher_id
+                })});
+                let success=await r.json();
+                console.log(success)
+            }catch(err){}
+        }
         function showSlots(teacher_id)
         {
             calendar.getEvents().forEach((ev)=>{
