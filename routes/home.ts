@@ -54,7 +54,7 @@ router.post("/login", async (req, res) => {
                 picture: googleUser.picture,
                 given_name: googleUser.given_name,
                 family_name: googleUser.family_name,
-                teachers: [],
+                teachers: {},
             });
         }
         login(req, res, { email: googleUser.email });
@@ -81,7 +81,6 @@ router.get("/test_teacher", async (req, res) => {
 });
 
 router.get("/logout", async (req, res) => {
-    console.log(req.cookies.jwt);
 });
 
 export default router;

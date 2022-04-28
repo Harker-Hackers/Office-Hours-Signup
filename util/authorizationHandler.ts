@@ -37,14 +37,15 @@ async function grabTeacherSlots(user: any) {
 
 async function grabStudentSlots(user: any) {
     let teacher_slots;
-    if (user.teachers.length > 0)
+    let teachers=Object.keys(user.teachers);
+    if (teachers.length > 0)
         teacher_slots = (
             await getSlots(
-                new MultiTeacherQuery(user.teachers),
+                new MultiTeacherQuery(teachers),
                 new StudentAvailableQuery(user.email)
             )
         ).results;
-    else teacher_slots = [];
+    else teacher_slots = {};
     user.teacher = false;
     user.slots = [];
     user.teacher_slots = teacher_slots;

@@ -4,10 +4,21 @@ import {
     DeleteDocumentsResponse,
     PatchDocumentsResponse,
     QueryRequestSql,
+    QueryResponse,
 } from "@rockset/client/dist/codegen/api";
 import { QueryCallback } from "./types";
 
 const client = rockset(require("./config.json").rocksetApiKey);
+
+
+export function isPatchSuccess (r:PatchDocumentsResponse) {
+    return r.data != undefined && !r.data[0].error;
+};
+export function isQuerySuccess(r:QueryResponse) {
+    return !!r.results
+    
+}
+
 
 export const addDocs = (
     collection: "slots" | "students" | "teachers",
