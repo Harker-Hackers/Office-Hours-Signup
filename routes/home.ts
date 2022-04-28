@@ -80,7 +80,6 @@ router.get("/test_teacher", async (req, res) => {
     res.json({ success: true });
 });
 
-router.get("/logout", async (req, res) => {
-});
+router.get("/logout", async (req, res) => {});
 
 export default router;

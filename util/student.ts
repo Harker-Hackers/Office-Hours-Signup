@@ -3,7 +3,14 @@ import {
     PatchDocumentsResponse,
     QueryResponse,
 } from "@rockset/client/dist/codegen/api";
-import { addDocs, query, rmDocs, editDocs, isPatchSuccess, isQuerySuccess } from "../db";
+import {
+    addDocs,
+    query,
+    rmDocs,
+    editDocs,
+    isPatchSuccess,
+    isQuerySuccess,
+} from "../db";
 import { googleUser, QueryCallback, Slot } from "../types";
 import { MultiTeacherQuery } from "./slots";
 import { getAllTeachers } from "./teacher";
@@ -12,31 +19,27 @@ export const createStudent = (studentData: any) => {
     addDocs("students", [studentData]);
 };
 
-
-export const validateTeacherIDs=async (ids:string[]):Promise<any>=>{
-    try{
-        if(!ids.length)
-            return {};
-        let q=await getAllTeachers(ids);
-        if(q==null)
-            return {};
-        let ret={} as any;
-        if(isQuerySuccess(q))
-            q.results?.forEach(r=>{
-                ret[r._id]=r.email
-            })
+export const validateTeacherIDs = async (ids: string[]): Promise<any> => {
+    try {
+        if (!ids.length) return {};
+        let q = await getAllTeachers(ids);
+        if (q == null) return {};
+        let ret = {} as any;
+        if (isQuerySuccess(q))
+            q.results?.forEach((r) => {
+                ret[r._id] = r.email;
+            });
         return ret;
-    } catch(err){
+    } catch (err) {
         return {};
     }
-}
+};
 
 export const addTeachersToStudent = async (
     student: { _id: string; teachers: any },
     teachers: any
 ) => {
-    if(Object.keys(teachers).length==0)
-        return false;
+    if (Object.keys(teachers).length == 0) return false;
     return isPatchSuccess(
         await editDocs("students", [
             {
@@ -45,7 +48,7 @@ export const addTeachersToStudent = async (
                     {
                         op: "REPLACE",
                         path: "/teachers",
-                        value: {...student.teachers,...teachers}
+                        value: { ...student.teachers, ...teachers },
                     },
                 ],
             },
@@ -54,7 +57,7 @@ export const addTeachersToStudent = async (
 };
 
 export const setStudentTeachers = async (
-    student: { _id: string,teachers:{} },
+    student: { _id: string; teachers: {} },
     teachers: {}
 ) => {
     return isPatchSuccess(
@@ -73,13 +76,15 @@ export const setStudentTeachers = async (
     );
 };
 
-export const deleteStudentTeachers=async(student:{_id:string,teachers:any},teachers:{})=>{
-    for(let i in teachers)
-    {
+export const deleteStudentTeachers = async (
+    student: { _id: string; teachers: any },
+    teachers: {}
+) => {
+    for (let i in teachers) {
         delete student.teachers[i];
     }
-    return await setStudentTeachers(student,teachers);
-}
+    return await setStudentTeachers(student, teachers);
+};
 
 export const canEditSlot = (
     student: { email: string },
@@ -97,11 +102,13 @@ export const getStudent = (email: string) => {
         query(
             {
                 query: `select * from \"office-hours\".students where email=:email`,
-                parameters:[{
-                    name:"email",
-                    type:"string",
-                    value:email
-                }]
+                parameters: [
+                    {
+                        name: "email",
+                        type: "string",
+                        value: email,
+                    },
+                ],
             },
             resolve
         );

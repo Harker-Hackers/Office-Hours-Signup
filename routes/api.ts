@@ -15,7 +15,12 @@ import {
     StudentAvailableQuery,
     StudentQuery,
 } from "../util/slots";
-import { addTeachersToStudent, setStudentTeachers, validateTeacherIDs, deleteStudentTeachers } from "../util/student";
+import {
+    addTeachersToStudent,
+    setStudentTeachers,
+    validateTeacherIDs,
+    deleteStudentTeachers,
+} from "../util/student";
 
 let router = express.Router();
 router.use(express.json());
@@ -52,19 +57,28 @@ router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
 });
 
 router.post("/add_teachers", studentSlotOnly, async (req: any, res) => {
-    let success = await addTeachersToStudent(req.user, await validateTeacherIDs(req.body.teachers));
+    let success = await addTeachersToStudent(
+        req.user,
+        await validateTeacherIDs(req.body.teachers)
+    );
     res.json({ success });
 });
 
 router.post("/change_teachers", studentSlotOnly, async (req: any, res) => {
-    let success = await setStudentTeachers(req.user, await validateTeacherIDs(req.body.teachers));
+    let success = await setStudentTeachers(
+        req.user,
+        await validateTeacherIDs(req.body.teachers)
+    );
     res.json({ success });
 });
 
-router.post("/delete_teachers",studentSlotOnly,async(req:any,res)=>{
-    let success = await deleteStudentTeachers(req.user, await validateTeacherIDs(req.body.teachers));
+router.post("/delete_teachers", studentSlotOnly, async (req: any, res) => {
+    let success = await deleteStudentTeachers(
+        req.user,
+        await validateTeacherIDs(req.body.teachers)
+    );
     res.json({ success });
-})
+});
 
 router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
     try {

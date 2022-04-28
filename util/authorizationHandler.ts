@@ -37,7 +37,7 @@ async function grabTeacherSlots(user: any) {
 
 async function grabStudentSlots(user: any) {
     let teacher_slots;
-    let teachers=Object.keys(user.teachers);
+    let teachers = Object.keys(user.teachers);
     if (teachers.length > 0)
         teacher_slots = (
             await getSlots(
