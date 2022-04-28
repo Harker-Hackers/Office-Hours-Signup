@@ -248,6 +248,50 @@ export class TimeRangeQuery extends MySlotQuery {
     }
 }
 
+export class NoOverlapQuery extends MySlotQuery {
+    constructor(mintime: string | Date, maxtime: string | Date) {
+        if (!(typeof mintime == "string")) mintime = toSQLTime(mintime);
+        if (!(typeof maxtime == "string")) maxtime = toSQLTime(maxtime);
+        super(
+            `CAST(startTime as time) > :mintime or CAST(endTime as time) < :maxtime`,
+            [
+                {
+                    name: "mintime",
+                    type: "time",
+                    value: mintime,
+                },
+                {
+                    name: "maxtime",
+                    type: "time",
+                    value: maxtime,
+                },
+            ]
+        );
+    }
+}
+export class OverlapQuery extends MySlotQuery {
+    constructor(mintime: string | Date, maxtime: string | Date) {
+        if (!(typeof mintime == "string")) mintime = toSQLTime(mintime);
+        if (!(typeof maxtime == "string")) maxtime = toSQLTime(maxtime);
+        super(
+            `CAST(startTime as time) <= :maxtime and CAST(endTime as time) >= :mintime`,
+            [
+                {
+                    name: "mintime",
+                    type: "time",
+                    value: mintime,
+                },
+                {
+                    name: "maxtime",
+                    type: "time",
+                    value: maxtime,
+                },
+            ]
+        );
+    }
+}
+
+
 export class DateTimeRangeQuery extends MySlotQuery {
     constructor(
         date: string | Date,
@@ -341,6 +385,8 @@ export const SlotUtil = {
     MultiTeacherQuery,
     StudentAvailableQuery,
     IDQuery,
+    NoOverlapQuery,
+    OverlapQuery,
     StartTimeOrder,
     StartDateTimeOrder,
 };

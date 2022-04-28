@@ -82,13 +82,24 @@ router.post("/delete_teachers", studentSlotOnly, async (req: any, res) => {
 
 router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
     try {
+        console.log("D");
         let slot = await getSlots(
             new SlotUtil.StudentAvailableQuery(req.user.email),
-            new SlotUtil.IDQuery(req.body.id)
+            new SlotUtil.IDQuery(req.body.id),
         );
+        //add something to make sure sltos dont overlap
         if (!slot || !slot.results || slot.results.length == 0) {
             throw new Error("Slot wasn't found");
         }
+        let sl=slot.results[0];
+        console.log(sl);
+        let rsl=await getSlots(
+            new SlotUtil.OverlapQuery(sl.startTime,sl.endTime),
+            new SlotUtil.StudentQuery(req.user.email)
+        )
+        console.log(rsl);
+        if(rsl&&rsl.results&&rsl.results.length>0)
+            throw new Error("Slot overlaps :(");
         let success = await addStudentToMeeting(
             req.user.email,
             slot.results[0]._id
