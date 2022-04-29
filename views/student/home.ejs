@@ -12,7 +12,7 @@
             <li onclick="confirm('Do you want to delete this teacher?')&&deleteTeachers(['<%- i %>'])"><a href="#" onclick=""><%- teachers[i] %></a></li>
         <% } %>
     </ul>
-    <select name="teachers" id="tsc_selection" onchange="showSlots(this.value,true)">
+    <select name="teachers" id="tsc_selection" onchange="loadAndShowTeacherSlots(this.value,true)">
         <option value="" disabled selected>Select a teacher</option>
         <% for(let i in teachers){%>
             <option value="<%- i %>"><%- teachers[i] %></option>
@@ -26,8 +26,7 @@
         const DEFAULT_SLOT_COLOR="#3A5AFF";
         const REMOVE_SLOT_COLOR="#FFADAD";
         const CREATE_SLOT_COLOR="#DDDDDD";
-        let my_slots=<%- JSON.stringify(slots) %>;
-        let teacher_slots=<%- JSON.stringify(teacher_slots) %>;
+        let slots=<%- JSON.stringify(slots) %>;
         let teachers=<%- JSON.stringify(teachers) %>;
         const email="<%- email %>";
         async function addTeachers(teachers){
@@ -76,6 +75,7 @@
         }
         function showSlots(teacher_id,temp)
         {
+            let ids=[];
             calendar.getEvents().forEach((ev)=>{
                 if((ev.extendedProps.teacher_id==teacher_id||(ev.extendedProps.student_email==email)))
                     ev.setProp("display","block");
@@ -92,8 +92,10 @@
         }
         async function loadTeacherSlots(teachid)
         {
-            let slots=await getTeacherSlots(teachid);
-            (slots.success)&&slots.slots.forEach(k=>createSlotEvent(k,true,{temp:true}));
+            let slt=await getTeacherSlots(teachid);
+            (slt.success)&&slt.slots.forEach(k=>{
+                (!slots.some(e => e._id === k._id))&&createSlotEvent(k,true,{temp:true});
+            });
         }
         async function loadAndShowTeacherSlots(teachid)
         {
@@ -166,8 +168,8 @@
                         confirm("Do you want to cancel this meeting?")&&cancelMeeting(info.event);
                 }
             });
-            for(let i=0;i<teacher_slots.length;i++) {
-                createSlotEvent(teacher_slots[i],false);
+            for(let i=0;i<slots.length;i++) {
+                createSlotEvent(slots[i],false);
             }
             calendar.render();
         });
