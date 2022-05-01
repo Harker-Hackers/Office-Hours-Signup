@@ -49,6 +49,7 @@ router.post("/create_slot", teacherSlotOnly, async (req: any, res) => {
         date: req.body.date,
         description: req.body.description,
     });
+    success&&updateHandler.updateFocus(req.user._id,"new_slot",slot);
     res.json({ success, slot });
 });
 
@@ -58,7 +59,9 @@ router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
     if(sl.results)
         rs=sl.results[0];
     let success = await deleteSlot({ _id: req.body.id });
-    success&&sl&&rs.student_email&&updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false));
+    success&&sl&&(updateHandler.updateFocus(req.user._id,"del_slot",rs._id)
+        ,rs.student_email&&updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false),
+        "del_meeting",rs._id));
     res.json({ success });
 });
 
@@ -150,6 +153,7 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
 router.post("/get_teacher_slots",studentOnly,async(req:any,res)=>{
     try{
         let teacher_slots=await getPartialSlots(["date","startTime","endTime","description","teacher_id"],new SlotUtil.TeacherQuery(req.body.teacher))
+        //updateHandler.focusStudent(updateHandler.generateUID(req.user.email,false),req.body.teacher);
         res.json({success:true,slots:teacher_slots.results});
     }catch(err){res.json({success:false})}
 })

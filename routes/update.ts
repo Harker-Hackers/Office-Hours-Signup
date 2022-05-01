@@ -11,6 +11,10 @@ export default (io:Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, 
             if(!u){socket.disconnect();return;}
             let uid=updateHandler.generateUID(u.teacher?u._id:u.email,u.teacher);
             updateHandler.addSocket(socket,uid);
+            socket.on("focus",r=>{
+                if(typeof r==="string")
+                    updateHandler.focusStudent(socket,r);
+            })
             socket.on("disconnect",function(){
                 updateHandler.removeSocket(uid,socket.id);
             })
