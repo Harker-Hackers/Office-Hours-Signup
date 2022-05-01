@@ -25,7 +25,8 @@
         "ejs": "^3.1.6",
         "express": "^4.17.3",
         "google-auth-library": "^7.14.1",
-        "jsonwebtoken": "^8.5.1"
+        "jsonwebtoken": "^8.5.1",
+        "socket.io": "^4.5.0"
     },
     "devDependencies": {
         "@types/express": "^4.17.13",

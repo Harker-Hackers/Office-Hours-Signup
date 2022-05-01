@@ -3,7 +3,6 @@ import { googleUser } from "../types";
 import {
     grabUserByEmail,
     login,
-    teacherSlotOnly,
 } from "../util/authorizationHandler";
 import getGoogleUser from "../util/getGoogleUser";
 import showError from "../util/showError";

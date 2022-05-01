@@ -1,9 +1,14 @@
 import express from "express";
+import http from "http";
 import * as routes from "./routes";
+import { Server } from "socket.io";
 
 (global as any).base = __dirname;
 
-let app = express();
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
 app.set("view engine", "ejs");
 app.use(require("cookie-parser")());
 
@@ -13,4 +18,6 @@ app.use("/api", routes.apiRouter);
 app.use("/teacher", routes.teacherRouter);
 app.use("/student", routes.studentRouter);
 
-app.listen(process.env.PORT ?? 3000, () => console.log("App running"));
+routes.updateSocketRouter(io);
+
+server.listen(process.env.PORT ?? 3000, () => console.log("App Started"));

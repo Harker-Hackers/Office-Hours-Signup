@@ -21,6 +21,7 @@ import {
     validateTeacherIDs,
     deleteStudentTeachers,
 } from "../util/student";
+import updateHandler from "../util/socketUpdateHandler";
 
 let router = express.Router();
 router.use(express.json());
@@ -52,7 +53,12 @@ router.post("/create_slot", teacherSlotOnly, async (req: any, res) => {
 });
 
 router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
+    let sl = await getSlots(new SlotUtil.IDQuery(req.body.id));
+    let rs;
+    if(sl.results)
+        rs=sl.results[0];
     let success = await deleteSlot({ _id: req.body.id });
+    success&&sl&&rs.student_email&&updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false));
     res.json({ success });
 });
 
@@ -86,7 +92,7 @@ router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
             new SlotUtil.StudentAvailableQuery(req.user.email),
             new SlotUtil.IDQuery(req.body.id),
         );
-        //add something to make sure sltos dont overlap
+        //add something to make sure slots dont overlap
         if (!slot || !slot.results || slot.results.length == 0) {
             throw new Error("Slot wasn't found");
         }
@@ -102,8 +108,15 @@ router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
             req.user.email,
             slot.results[0]._id
         );
+        let s=(success.data != undefined && !success.data[0].error);
+        s&&updateHandler.updateSocket(updateHandler.generateUID(sl.teacher_id,true),"meeting_change",{
+            slot_id:slot.results[0]._id,
+            data:{
+                student_email:req.user.email
+            }
+        });
         res.json({
-            success: success.data != undefined && !success.data[0].error,
+            success:s
         });
     } catch (err) {
         res.json({ success: false });
@@ -120,8 +133,15 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
             throw new Error("Slot wasn't found");
         }
         let success = await addStudentToMeeting("", slot.results[0]._id);
+        let s=(success.data != undefined && !success.data[0].error);
+        s&&updateHandler.updateSocket(updateHandler.generateUID(slot.results[0].teacher_id,true),"meeting_change",{
+            slot_id:slot.results[0]._id,
+            data:{
+                student_email:""
+            }
+        });
         res.json({
-            success: success.data != undefined && !success.data[0].error,
+            success: s,
         });
     } catch (err) {
         res.json({ success: false });
