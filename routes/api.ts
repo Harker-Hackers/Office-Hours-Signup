@@ -22,6 +22,7 @@ import {
     deleteStudentTeachers,
 } from "../util/student";
 import updateHandler from "../util/socketUpdateHandler";
+import { studentEmailHandler } from "../util/emailHandler";
 
 let router = express.Router();
 router.use(express.json());
@@ -60,8 +61,8 @@ router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
         rs=sl.results[0];
     let success = await deleteSlot({ _id: req.body.id });
     success&&sl&&(updateHandler.updateFocus(req.user._id,"del_slot",rs._id)
-        ,rs.student_email&&updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false),
-        "del_meeting",rs._id));
+        ,rs.student_email&&(studentEmailHandler.cancelSlot(rs.student_email,req.user.name,rs.date,rs.startTime,rs.endTime),updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false),
+        "del_meeting",rs._id)));
     res.json({ success });
 });
 

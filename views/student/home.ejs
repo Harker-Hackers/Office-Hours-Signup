@@ -110,8 +110,8 @@
         }
         async function loadAndShowTeacherSlots(teachid)
         {
-            await loadTeacherSlots(teachid);
             try{socket.emit("focus",teachid)}catch(err){}
+            await loadTeacherSlots(teachid);
             showSlots(teachid);
         }
         async function signMeeting(ev)

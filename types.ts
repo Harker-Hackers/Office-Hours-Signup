@@ -51,4 +51,16 @@ export interface Slot extends DatabaseItem {
     teacher_id: string;
     student_email: string;
 }
+
+export interface Email {
+    to:string,
+    from:string,
+    subject:string,
+    text:string,
+    html?:string,
+    cc?:string,
+    bcc?:string,
+    attachments?:any
+}
+
 export type QueryCallback = (value: QueryResponse) => void;
