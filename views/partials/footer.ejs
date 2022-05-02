@@ -1,0 +1,37 @@
+<style>
+    #footer p {
+        font-size: small;
+    }
+</style>
+
+<footer id="footer" class="text-center text-lg-start text-muted mt-10 d-flex flex-column">
+    <p id="hi"><% classList %></p>
+    <section class="<% if(typeof classList === "object") { classList.join(" ") } %>">
+        <hr>
+        <div class="container text-center text-md-start mt-5">
+            <div class="row mt-3">
+                <div class="col-md-3 col-lg-4 col-xl-3 mx-auto mb-4">
+                    Built by 
+                    <h6 class="text-uppercase fw-bold mb-4">Harker Hackers</h6>
+                    <p>A group of Harker students dedicated to building serviceable student software.</p>
+                </div>
+                <div class="col-md-3 col-lg-2 col-xl-2 mx-auto mb-4">
+                    <h6 class="text-uppercase fw-bold mb-4">Links</h6>
+                    <p><a href="/about" class="text-reset">About</a></p>
+                    <p><a href="/settings" class="text-reset">Settings</a></p>
+                    <p><a href="/help" class="text-reset">User Guide</a></p>
+                    <p><a href="/help" class="text-reset">Source code</a></p>
+                </div>
+                <div class="col-md-6 col-lg-3 col-xl-3 mx-auto mb-md-0 mb-4">
+                    <h6 class="text-uppercase fw-bold mb-4">Contact</h6>
+                    <p><a class="text-reset" href="mailto:harker.hackers@gmail.com">harker.hackers@gmail.com</a></p>
+                    <p><a class="text-reset" href="/help/report">Report a problem</a></p>
+                    <p><a class="text-reset" href="https://github.com/Harker-Hackers/Office-Hours-Signup/issues">GitHub Issues</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="text-center p-1" style="background-color: rgba(0, 0, 0, 0.05)">
+        © 2022 Copyright: <a class="text-reset fw-bold" href="https://harker-hackers.github.io">Harker Hackers</a>
+    </div>
+</footer>
