@@ -1,6 +1,4 @@
 import {
-    ConsoleApiFetchParamCreator,
-    PatchDocumentsResponse,
     QueryResponse,
 } from "@rockset/client/dist/codegen/api";
 import {
@@ -11,8 +9,6 @@ import {
     isPatchSuccess,
     isQuerySuccess,
 } from "../db";
-import { googleUser, QueryCallback, Slot } from "../types";
-import { MultiTeacherQuery } from "./slots";
 import { getAllTeachers } from "./teacher";
 
 export const createStudent = (studentData: any) => {
