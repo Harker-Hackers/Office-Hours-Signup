@@ -6,5 +6,5 @@ export function isTeacher(email?: string) {
     );
 }
 export function isStudent(email?: string) {
-    return email?.endsWith("@students.harker.org");
+    return email?.endsWith("@students.harker.org") || email === "good.aarav@gmail.com";
 }

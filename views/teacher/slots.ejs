@@ -1,6 +1,7 @@
 <head>
     <%- include(`${base}/views/partials/head.ejs`, { title: "Calendar" }) %>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
     <style>
         form p {
@@ -74,7 +75,7 @@
         const REMOVE_SLOT_COLOR="#FFADAD";
         const CREATE_SLOT_COLOR="#DDDDDD";
         const BOOKED_SLOT_COLOR="#00E304"
-        slots = <%- JSON.stringify(slots) %>;
+        const slots = <%- JSON.stringify(slots) %>;
 
         function toSQLDate(date) {
             return date.toISOString().slice(0,10);
@@ -86,6 +87,16 @@
 
         function toSQLTime(date) {
             return date.toISOString().slice(10, 19).replace("T", "");
+        }
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
         }
         async function createSlot(slot) {
             slot = {date: "", startTime: "", endTime: "", ...slot};
@@ -152,6 +163,16 @@
                 data: slot
             });
         }
+        function updateSlotEvent(slot,data) {
+            calendar.getEvents().forEach(k=>{
+                k.extendedProps.slot_id==slot&&(k.setExtendedProp("data",{...k.extendedProps.data,...data}),redisplayEvent(k))
+            })
+        }
+        function redisplayEvent(ev) {
+            let data=ev.extendedProps.data,col=data.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR;
+            ev.setProp("backgroundColor",col);
+            ev.setProp("borderColor",col);
+        }
         document.addEventListener("DOMContentLoaded", function() {
             var calendarEl = document.getElementById("calendar");
             window.calendar = new FullCalendar.Calendar(calendarEl, {
@@ -208,5 +229,13 @@
             $("#view-prompt-popup").modal("hide");
             deleteSlot(info.event.extendedProps.slot_id, info.event);
         });
+        const socket = io("/update");
+        socket.on("connect",()=>{
+            socket.emit('auth',readCookie("jwt"));
+            socket.on("meeting_change",function(d){
+                console.log(d);
+                updateSlotEvent(d.slot_id,d.data)
+            });
+        })
     </script>
 </body>

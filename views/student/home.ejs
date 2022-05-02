@@ -1,6 +1,7 @@
 <head>
     <%- include(`${base}/views/partials/head.ejs`, { title: "Portal" }) %>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
 </head>
 <body class="ms-4 me-4">
@@ -90,6 +91,16 @@
                     ev.remove();
             })
         }
+        function deleteTempSlot(sl_id){
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.slot_id==sl_id&&ev.extendedProps.temp)ev.remove();
+            })
+        }
+        function deleteMeeting(sl_id){
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.slot_id==sl_id&&!ev.extendedProps.temp)ev.remove();
+            })
+        }
         async function loadTeacherSlots(teachid)
         {
             let slt=await getTeacherSlots(teachid);
@@ -99,6 +110,7 @@
         }
         async function loadAndShowTeacherSlots(teachid)
         {
+            try{socket.emit("focus",teachid)}catch(err){}
             await loadTeacherSlots(teachid);
             showSlots(teachid);
         }
@@ -151,6 +163,16 @@
                 temp:!!options.temp
             });
         }
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
             window.calendar = new FullCalendar.Calendar(calendarEl, {
@@ -169,9 +191,20 @@
                 }
             });
             for(let i=0;i<slots.length;i++) {
-                createSlotEvent(slots[i],false);
+                createSlotEvent(slots[i],true);
             }
             calendar.render();
         });
+        const socket = io("/update");
+        socket.on("connect",()=>{
+            socket.emit('auth',readCookie("jwt"));
+            socket.on("new_slot",function(d){
+                createSlotEvent(d,true,{temp:true});
+            });
+            socket.on("del_slot",function(d){
+                deleteTempSlot(d);
+            })
+            socket.on("del_meeting",function(d){deleteMeeting(d);alert("A Teacher has deleted one of your meetings.")})
+        })
     </script>
 </body>
