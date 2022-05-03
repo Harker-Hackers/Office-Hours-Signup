@@ -13,7 +13,7 @@ import {
     deleteSlot,
     getSlots,
     SlotUtil,
-    getPartialSlots
+    getSpecialSlots
 } from "../util/slots";
 import {
     addTeachersToStudent,
@@ -153,7 +153,12 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
 });
 router.post("/get_teacher_slots",studentOnly,async(req:any,res)=>{
     try{
-        let teacher_slots=await getPartialSlots(["date","startTime","endTime","description","teacher_id"],new SlotUtil.TeacherQuery(req.body.teacher))
+        let teacher_slots=await getSpecialSlots(`SELECT *,
+        CASE WHEN student_email='' THEN ''
+        WHEN student_email=:emailspeciallmao THEN student_email
+        ELSE 'occupied'
+        END AS student_email
+        FROM "office-hours".slots s `,[{name:"emailspeciallmao",value:req.user.email,type:'string'}],new SlotUtil.TeacherQuery(req.body.teacher))
         //updateHandler.focusStudent(updateHandler.generateUID(req.user.email,false),req.body.teacher);
         res.json({success:true,slots:teacher_slots.results});
     }catch(err){res.json({success:false})}

@@ -27,7 +27,10 @@
         const DEFAULT_SLOT_COLOR="#3A5AFF";
         const REMOVE_SLOT_COLOR="#FFADAD";
         const CREATE_SLOT_COLOR="#DDDDDD";
-        let slots=<%- JSON.stringify(slots) %>;
+        const BOOKED_SLOT_COLOR="#00E304";
+        let currteacher="";
+        let allslots=<%- JSON.stringify(slots) %>;
+        let slots=new Map(allslots.map(i => [i._id, i]));
         let teachers=<%- JSON.stringify(teachers) %>;
         const email="<%- email %>";
         async function addTeachers(teachers){
@@ -77,39 +80,39 @@
         function showSlots(teacher_id,temp)
         {
             let ids=[];
+            currteacher=teacher_id;
             calendar.getEvents().forEach((ev)=>{
-                if((ev.extendedProps.teacher_id==teacher_id||(ev.extendedProps.student_email==email)))
-                    ev.setProp("display","block");
-                else
-                    ev.setProp("display","none")
+                redisplayEvent(ev);
             })
         }
         function clearTemp()
         {
             calendar.getEvents().forEach((ev)=>{
-                if(ev.extendedProps.temp)
+                if(ev.extendedProps.data.temp)
                     ev.remove();
             })
         }
         function deleteTempSlot(sl_id){
             calendar.getEvents().forEach((ev)=>{
-                if(ev.extendedProps.slot_id==sl_id&&ev.extendedProps.temp)ev.remove();
+                if(ev.extendedProps.slot_id==sl_id&&ev.extendedProps.data.temp)ev.remove();
             })
         }
         function deleteMeeting(sl_id){
             calendar.getEvents().forEach((ev)=>{
-                if(ev.extendedProps.slot_id==sl_id&&!ev.extendedProps.temp)ev.remove();
+                if(ev.extendedProps.slot_id==sl_id&&!ev.extendedProps.data.temp)ev.remove();
             })
         }
         async function loadTeacherSlots(teachid)
         {
             let slt=await getTeacherSlots(teachid);
+            let ev=calendar.getEvents();
             (slt.success)&&slt.slots.forEach(k=>{
-                (!slots.some(e => e._id === k._id))&&createSlotEvent(k,true,{temp:true});
+                (k.student_email!==email)&&(!ev.some(r=>r.extendedProps.slot_id==k._id))&&(createSlotEvent(k,true,{temp:true}));
             });
         }
         async function loadAndShowTeacherSlots(teachid)
         {
+            clearTemp();
             try{socket.emit("focus",teachid)}catch(err){}
             await loadTeacherSlots(teachid);
             showSlots(teachid);
@@ -117,7 +120,7 @@
         async function signMeeting(ev)
         {
             try {
-                ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)
+                ev.setProp("backgroundColor",BOOKED_SLOT_COLOR);ev.setProp("borderColor",BOOKED_SLOT_COLOR)
                 let r = await fetch("/api/join_meeting", {
                     method: "POST",
                     headers: {
@@ -128,15 +131,31 @@
                 })
                 let success=await r.json();
                 if(success.success)
-                    ev.setExtendedProp("student_email",email)
+                {
+                    updateEvent(ev,{"student_email":email,"temp":false});
+                    redisplayEvent(ev);
+                }
                 else
                     throw new Error()
-            } catch(err){ev.setProp("backgroundColor",CREATE_SLOT_COLOR)}
+            } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR)}
+        }
+        function updateEvent(ev,d){
+            ev.setExtendedProp("data",{...ev.extendedProps.data,...d});
+        }
+        function redisplayEvent(ev){
+            let d=ev.extendedProps.data;
+            if((d.teacher_id==currteacher||(d.student_email==email)))
+                ev.setProp("display","block");
+            else
+                ev.setProp("display","none")
+            let col=d.student_email==email?BOOKED_SLOT_COLOR:(d.student_email==''?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR);
+            ev.setProp('backgroundColor',col);
+            ev.setProp('borderColor',col);
         }
         async function cancelMeeting(ev)
         {
             try{
-                ev.setProp("backgroundColor",CREATE_SLOT_COLOR);
+                ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR)
                 let r = await fetch("/api/leave_meeting", {
                     method: "POST",
                     headers: {
@@ -147,20 +166,23 @@
                 })
                 let success=await r.json();
                 if(success)
-                    ev.setExtendedProp("student_email","")
+                {
+                    updateEvent(ev,{"student_email":"",temp:true});
+                    redisplayEvent(ev);
+                }
                 else
                     throw new Error();
-            } catch(err){console.log(err);ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR)}
+            } catch(err){console.log(err);ev.setProp("backgroundColor",BOOKED_SLOT_COLOR);ev.setProp("borderColor",BOOKED_SLOT_COLOR)}
         }
         function createSlotEvent(slot,z,options)
         {
             options=!!options?options:{}
-            let col=slot.student_email?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR
+            let col=slot.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR
             calendar.addEvent({start:slot.date+"T"+slot.startTime,end:slot.date+"T"+slot.endTime,
-                title:"Meeting",slot_id:slot._id,teacher_id:slot.teacher_id,
-                backgroundColor:(col),borderColor:col,student_email:slot.student_email,
+                title:"Meeting",data:{...slot,...options},
+                backgroundColor:(col),borderColor:col,
                 display:z?"block":"none",
-                temp:!!options.temp
+                slot_id:slot._id
             });
         }
         function readCookie(name) {
@@ -184,15 +206,15 @@
                 },
                 eventClick: (info) => {
                     let ev=info.event;
-                    if(ev.extendedProps.student_email=="")
+                    if(ev.extendedProps.data.student_email=="")
                         confirm("Do you want to sign up for this meeting?")&&signMeeting(info.event);
-                    else
+                    else if (ev.extendedProps.data.student_email==email)
                         confirm("Do you want to cancel this meeting?")&&cancelMeeting(info.event);
+                    else
+                        prompt("This meeting is booked by someone else.")
                 }
             });
-            for(let i=0;i<slots.length;i++) {
-                createSlotEvent(slots[i],true);
-            }
+            slots.forEach((v,k)=>{createSlotEvent(v,true)})
             calendar.render();
         });
         const socket = io("/update");

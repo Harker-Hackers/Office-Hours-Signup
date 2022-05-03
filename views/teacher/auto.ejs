@@ -1,0 +1,24 @@
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Auto Slot Creation" }) %>
+</head>
+<body>
+    <%- include(`${base}/views/partials/teacher/topBar.ejs`, { active: "auto" }) %>
+    <div class="mt-2 ms-4 me-4">
+        <div class="text-center">
+        </div>
+    </div>
+    <script>
+        async function getDaySchedule(d){
+            let r = await fetch("https://bell.dev.harker.org/api/schedule?"+new URLSearchParams({month:d.getMonth()+1,year:d.getFullYear(),day:d.getDate()}), {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                method: "GET"
+            })
+            try{
+                let response = await r.json();
+                return response;
+            } catch(err){return {}}
+        }
+    </script>
+</body>

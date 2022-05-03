@@ -98,6 +98,18 @@
             }
             return null;
         }
+        async function getDaySchedule(d){
+            let r = await fetch("https://bell.dev.harker.org/api/schedule?"+new URLSearchParams({month:d.getMonth()+1,year:d.getFullYear(),day:d.getDate()}), {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                method: "GET"
+            })
+            try{
+                let response = await r.json();
+                return response;
+            } catch(err){return false}
+        }
         async function createSlot(slot) {
             slot = {date: "", startTime: "", endTime: "", ...slot};
             let ev = calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
@@ -168,10 +180,75 @@
                 k.extendedProps.slot_id==slot&&(k.setExtendedProp("data",{...k.extendedProps.data,...data}),redisplayEvent(k))
             })
         }
+        function mulberry32(a) {
+            return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+        String.prototype.toHSL = function(opts) {
+            var h, s, l;
+            opts = opts || {};
+            opts.hue = opts.hue || [0, 360];
+            opts.sat = opts.sat || [25, 50];
+            opts.lit = opts.lit || [80, 100];
+
+            var range = function(hash, min, max) {
+                var diff = max - min;
+                var x = ((hash % diff) + diff) % diff;
+                return x + min;
+            }
+
+            var hash = 0;
+            if (this.length === 0) return hash;
+            for (var i = 0; i < this.length; i++) {
+                hash += this.charCodeAt(i) + ((hash << 5) - hash)+mulberry32(this.charCodeAt(i)+i+this.length)();
+                hash&hash;
+            }
+            h = range(hash, opts.hue[0], opts.hue[1]);
+            s = range(hash+mulberry32(432)(), opts.sat[0], opts.sat[1]);
+            l = range(hash+mulberry32(143)(), opts.lit[0], opts.lit[1]);
+
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        }
         function redisplayEvent(ev) {
             let data=ev.extendedProps.data,col=data.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR;
             ev.setProp("backgroundColor",col);
             ev.setProp("borderColor",col);
+        }
+        const daysWithBackgroundEvents=new Set();
+        async function createBackgroundEventsForDay(day){
+            let key=day.toLocaleDateString('en-us');
+            if(!daysWithBackgroundEvents.has(key)){
+                let resp = await getDaySchedule(day);
+                if(!resp)
+                    return;       
+                else
+                {
+                    daysWithBackgroundEvents.add(key);
+                    resp.schedule.forEach(k=>{
+                        console.log(k);
+                        let s=new Date(k.start.slice(0,-1));
+                        let e=new Date(k.end.slice(0,-1));
+                        calendar.addEvent({
+                            start:s,
+                            end:e,
+                            display:"background",
+                            title:k.name,
+                            color:k.name=="Office Hours"?"rgb(0,255,0)":k.name.toHSL(),
+                            popup:{
+                                html:`
+                                <div style="background-color:rgb(250,250,200);">
+                                    <b>${k.name}</b>
+                                    <p style="font-size:10px;">${s.toLocaleTimeString('en-us')} - ${e.toLocaleTimeString('en-us')}</p>
+                                </div>`
+                            }
+                        })
+                    })
+                }    
+            }
         }
         document.addEventListener("DOMContentLoaded", function() {
             var calendarEl = document.getElementById("calendar");
@@ -191,11 +268,43 @@
                     $("#meeting-description").html(info.event.extendedProps.data.description ? `<b>Description</b>: ${info.event.extendedProps.data.description}` : "");
                     $("#view-prompt-popup").modal("show");
                 },
+                eventMouseEnter: (info)=>{
+                    let ev=info.event;
+                    let elem=info.el;
+                    if(ev.extendedProps.popup){
+                        let offset=elem.getBoundingClientRect();
+                        let tooltip = document.createElement("div");
+                        tooltip.id="bgevent_tooltip_"+ev.title;
+                        tooltip.className="bgevent_tooltip"
+                        tooltip.style.top=offset.top+scrollY-40+"px";
+                        tooltip.style.left=offset.left+scrollX+"px";
+                        tooltip.style.height="0px";
+                        tooltip.style.position="absolute";
+                        tooltip.style.zIndex="1000";
+                        tooltip.innerHTML=ev.extendedProps.popup.html;
+                        document.body.appendChild(tooltip);
+                    }
+                },
+                eventMouseLeave: (info)=>{
+                    let ev=info.event;
+                    try{
+                        document.getElementById("bgevent_tooltip_"+ev.title).remove();
+                    }catch(err){}
+                },
                 dateClick: (info) => {
                     window.info = info;
                     $("#prompt-error").html("");
                     $("#prompt-date-input").val(toSQLDate(info.date));
                     $("#prompt-popup").modal("show");
+                },
+                datesSet: async (r)=>{
+                    console.log(r);
+                    if(!(r.view.type=='timeGridDay'||r.view.type=='timeGridWeek'))
+                        return;
+                    for(let d=r.start;d<r.end;d.setDate(d.getDate()+1))
+                    {
+                        createBackgroundEventsForDay(d)
+                    }
                 }
             });
             let slot;
@@ -233,7 +342,6 @@
         socket.on("connect",()=>{
             socket.emit('auth',readCookie("jwt"));
             socket.on("meeting_change",function(d){
-                console.log(d);
                 updateSlotEvent(d.slot_id,d.data)
             });
         })
