@@ -6,6 +6,7 @@
     <div class="mt-2 ms-4 me-4">
         <div class="text-center">
         </div>
+        <button onclick='let z=await generateAndSendSlots("2022-05-01","2022-06-03",[{startTime:"18:00:00",endTime:"18:15:00"},{startTime:"18:00:00",endTime:"15:30:00"},{startTime:"15:30:00",endTime:"15:40:00"}],[{startTime:"15:00:00",endTime:"15:15:00"}],[{startTime:"15:00:00",endTime:"15:15:00"},{startTime:"15:15:00",endTime:"15:30:00"},{startTime:"15:30:00",endTime:"15:40:00"}],[{startTime:"15:00:00",endTime:"15:30:00"}])'>createslotslmao</button>
     </div>
     <script>
         async function getDaySchedule(d){
@@ -19,6 +20,53 @@
                 let response = await r.json();
                 return response;
             } catch(err){return {}}
+        }
+        function* getDateGenerator(minDate,maxDate){
+            for(let i=new Date(minDate+"T00:00:00");i<=new Date(maxDate+"T00:00:00");i.setDate(i.getDate()+1))
+            {
+                yield i;
+            }
+        }
+        async function getSchedules(minDate,maxDate){
+            let results=new Map();
+            for(let i of getDateGenerator(minDate,maxDate)){
+                results.set(i.toISOString().split("T")[0],await getDaySchedule(i));
+            }
+            return results;
+        }
+        async function generateSlots(minDate,maxDate,aS,bS,cS,dS){
+            let res=await getSchedules(minDate,maxDate);
+            console.log(res);
+            let f=new Set();
+            let s=new Map();
+            for(let [k,v] of res){
+                if("variant" in v&&v.variant!='adjusted')
+                    f.add(k);
+                else
+                switch (v.code){
+                    case 'A':s.set(k,aS);break;
+                    case 'B':s.set(k,bS);break;
+                    case 'C':s.set(k,cS);break;
+                    case 'D':s.set(k.dS);break;
+                }
+            }
+            s.delete(undefined);
+            return [s,f];
+        }
+        async function generateAndSendSlots(startTime,endTime,a,b,c,d){
+            let results=await generateSlots(startTime,endTime,a,b,c,d);
+            console.log(results);
+            let resp=await fetch("/api/generate_slots_from_json", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(Object.fromEntries(results[0]))
+            });
+            let s=await resp.json();
+            console.log(s);
+            return results[1];
         }
     </script>
 </body>

@@ -6,6 +6,7 @@ import {
     isStoredTeacher,
     isStoredStudent,
     studentOnly,
+    teacherOnly,
 } from "../util/authorizationHandler";
 import {
     addStudentToMeeting,
@@ -23,6 +24,7 @@ import {
 } from "../util/student";
 import updateHandler from "../util/socketUpdateHandler";
 import { studentEmailHandler } from "../util/emailHandler";
+import { JSONSlotGenerator } from "../util/autoSlotHandler";
 
 let router = express.Router();
 router.use(express.json());
@@ -162,6 +164,13 @@ router.post("/get_teacher_slots",studentOnly,async(req:any,res)=>{
         //updateHandler.focusStudent(updateHandler.generateUID(req.user.email,false),req.body.teacher);
         res.json({success:true,slots:teacher_slots.results});
     }catch(err){res.json({success:false})}
+})
+
+router.post("/generate_slots_from_json",teacherOnly,async(req:any,res)=>{
+    console.log(req.body);
+    console.log(JSONSlotGenerator.createJSONSlotConfig(req.body));
+    let z=new JSONSlotGenerator(JSONSlotGenerator.createJSONSlotConfig(req.body))
+    z.createSlots(req.user._id);
 })
 
 export default router;

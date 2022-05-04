@@ -88,6 +88,53 @@
         function toSQLTime(date) {
             return date.toISOString().slice(10, 19).replace("T", "");
         }
+        function isColliding(el1,el2){
+            el1=el1.getBoundingClientRect();
+            el2=el2.getBoundingClientRect();
+            return !(el1.top>=el2.bottom||el1.bottom<=el2.top||el1.left>=el2.right||el1.right<=el2.left);
+        }
+        function isEventColliding(ev1,ev2){
+            if(ev2.start<=ev1.end&&ev2.end>=ev1.start&&ev1.col==ev2.col){
+                console.log("COLLISION");
+                console.log(ev1.name+" "+ev1.start+" "+ev1.end+" "+ev1.col);
+                console.log(ev2.name+" "+ev2.start+" "+ev2.end+" "+ev2.col);
+                return true;
+            }
+        }
+        function mergeEventContainers(evl1,evl2){
+            
+        }
+        function splitEvent(el,elems){
+            let uid=0;
+            elems = elems.map(elem=>{
+                let boundingBox=k.getBoundingClientRect();
+                return {
+                    start:boundingBox.top,
+                    end:boundingBox.bottom,
+                    column:boundingBox.left,
+                    el:elem
+            }})
+            
+        }
+        function splitAndShiftEvents(){
+            elems=[...document.querySelectorAll(".fc-bg-event")];
+            let evls=splitEvent(elems);
+            evls.forEach(evl=>{
+                if(evl.elems.size>1)
+                {
+                    let col=0;
+                    console.log(evl.elems.size);
+                    evl.elems.forEach((v,k)=>{
+                        shiftEventElement(v,evl.elems.size,col++);
+                    })
+                }
+            })
+        }
+        function shiftEventElement(el,totcols,myleft,myright){
+            myright=myright||myleft+1;
+            el.style.width=100*(myright-myleft)/totcols+"%";
+            el.style.left=100*(myleft)/totcols+"%";
+        }
         function readCookie(name) {
             var nameEQ = name + "=";
             var ca = document.cookie.split(';');
@@ -113,7 +160,7 @@
         async function createSlot(slot) {
             slot = {date: "", startTime: "", endTime: "", ...slot};
             let ev = calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
-                title: "Meeting",
+                title: "",
                 data: slot,
                 backgroundColor: CREATE_SLOT_COLOR,
                 borderColor: CREATE_SLOT_COLOR,
@@ -192,8 +239,8 @@
             var h, s, l;
             opts = opts || {};
             opts.hue = opts.hue || [0, 360];
-            opts.sat = opts.sat || [25, 50];
-            opts.lit = opts.lit || [80, 100];
+            opts.sat = opts.sat || [99, 100];
+            opts.lit = opts.lit || [49, 51];
 
             var range = function(hash, min, max) {
                 var diff = max - min;
@@ -229,15 +276,16 @@
                 {
                     daysWithBackgroundEvents.add(key);
                     resp.schedule.forEach(k=>{
-                        console.log(k);
                         let s=new Date(k.start.slice(0,-1));
                         let e=new Date(k.end.slice(0,-1));
                         calendar.addEvent({
                             start:s,
                             end:e,
                             display:"background",
+                            name:k.name+Math.random(),
+                            color:k.name=="Office Hours"?"rgb(0,255,0)":(Math.random()*1000000+[]).toHSL(),
+                            textColor:"#000000",
                             title:k.name,
-                            color:k.name=="Office Hours"?"rgb(0,255,0)":k.name.toHSL(),
                             popup:{
                                 html:`
                                 <div style="background-color:rgb(250,250,200);">
@@ -274,7 +322,7 @@
                     if(ev.extendedProps.popup){
                         let offset=elem.getBoundingClientRect();
                         let tooltip = document.createElement("div");
-                        tooltip.id="bgevent_tooltip_"+ev.title;
+                        tooltip.id="bgevent_tooltip_"+ev.extendedProps.name;
                         tooltip.className="bgevent_tooltip"
                         tooltip.style.top=offset.top+scrollY-40+"px";
                         tooltip.style.left=offset.left+scrollX+"px";
@@ -288,7 +336,7 @@
                 eventMouseLeave: (info)=>{
                     let ev=info.event;
                     try{
-                        document.getElementById("bgevent_tooltip_"+ev.title).remove();
+                        document.getElementById("bgevent_tooltip_"+ev.extendedProps.name).remove();
                     }catch(err){}
                 },
                 dateClick: (info) => {
@@ -305,7 +353,10 @@
                     {
                         createBackgroundEventsForDay(d)
                     }
-                }
+                },
+                eventAfterAllRender: (r)=>{
+                    fixRecurringEventCollision();
+                },
             });
             let slot;
             for(let i = 0; i < slots.length; i++) {

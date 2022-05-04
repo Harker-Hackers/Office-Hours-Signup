@@ -1,6 +1,7 @@
 import { Slot } from "../types";
 import {
     canCreateSlot,
+    createSlot,
     createSlots,
     deleteSlots,
     getSlots,
@@ -8,6 +9,7 @@ import {
     toSQLDate,
     toSQLTime,
 } from "./slots";
+import updateHandler from "./socketUpdateHandler";
 
 export class AutoSlotHandler {
     constructor() {}
@@ -54,12 +56,9 @@ export abstract class AutoSlotGenerator {
 export abstract class SafeAutoSlotGenerator extends AutoSlotGenerator {
     async generateSafeSlots(teacher_id: string): Promise<AutoSlot[]> {
         let slots = [] as any[];
-        let currSlot = this.generateSlot(),currTestSlot:Slot;
+        let currSlot = this.generateSlot()
         while (currSlot) {
-            currTestSlot={...currSlot,teacher_id:teacher_id} as Slot;
-            if(await canCreateSlot(currTestSlot)){
-                slots.push(currSlot);
-            }
+            slots.push(currSlot);
             currSlot = this.generateSlot();
         }
         return slots;
@@ -73,7 +72,10 @@ export abstract class SafeAutoSlotGenerator extends AutoSlotGenerator {
                 description: description || "",
             };
         });
-        slots.length&&await createSlots(slots as Slot[]);
+        for (let i of slots){
+            let s=await createSlot(i as Slot);
+            s.success&&updateHandler.updateFocus(teacher_id,"new_slot",i);
+        }
     }
 }
 interface TimeSlot{
