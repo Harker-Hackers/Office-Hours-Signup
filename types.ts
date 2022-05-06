@@ -53,14 +53,14 @@ export interface Slot extends DatabaseItem {
 }
 
 export interface Email {
-    to:string,
-    from:string,
-    subject:string,
-    text:string,
-    html?:string,
-    cc?:string,
-    bcc?:string,
-    attachments?:any
+    to: string;
+    from: string;
+    subject: string;
+    text: string;
+    html?: string;
+    cc?: string;
+    bcc?: string;
+    attachments?: any;
 }
 
 export type QueryCallback = (value: QueryResponse) => void;

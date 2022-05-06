@@ -14,7 +14,7 @@ import {
     deleteSlot,
     getSlots,
     SlotUtil,
-    getSpecialSlots
+    getSpecialSlots,
 } from "../util/slots";
 import {
     addTeachersToStudent,
@@ -52,19 +52,31 @@ router.post("/create_slot", teacherSlotOnly, async (req: any, res) => {
         date: req.body.date,
         description: req.body.description,
     });
-    success&&updateHandler.updateFocus(req.user._id,"new_slot",slot);
+    success && updateHandler.updateFocus(req.user._id, "new_slot", slot);
     res.json({ success, slot });
 });
 
 router.post("/delete_slot", teacherSlotOnly, async (req: any, res) => {
     let sl = await getSlots(new SlotUtil.IDQuery(req.body.id));
     let rs;
-    if(sl.results)
-        rs=sl.results[0];
+    if (sl.results) rs = sl.results[0];
     let success = await deleteSlot({ _id: req.body.id });
-    success&&sl&&(updateHandler.updateFocus(req.user._id,"del_slot",rs._id)
-        ,rs.student_email&&(studentEmailHandler.cancelSlot(rs.student_email,req.user.name,rs.date,rs.startTime,rs.endTime),updateHandler.updateSocket(updateHandler.generateUID(rs.student_email,false),
-        "del_meeting",rs._id)));
+    success &&
+        sl &&
+        (updateHandler.updateFocus(req.user._id, "del_slot", rs._id),
+        rs.student_email &&
+            (studentEmailHandler.cancelSlot(
+                rs.student_email,
+                req.user.name,
+                rs.date,
+                rs.startTime,
+                rs.endTime
+            ),
+            updateHandler.updateSocket(
+                updateHandler.generateUID(rs.student_email, false),
+                "del_meeting",
+                rs._id
+            )));
     res.json({ success });
 });
 
@@ -96,33 +108,38 @@ router.post("/join_meeting", studentSlotOnly, async (req: any, res) => {
     try {
         let slot = await getSlots(
             new SlotUtil.StudentAvailableQuery(req.user.email),
-            new SlotUtil.IDQuery(req.body.id),
+            new SlotUtil.IDQuery(req.body.id)
         );
         //add something to make sure slots dont overlap
         if (!slot || !slot.results || slot.results.length == 0) {
             throw new Error("Slot wasn't found");
         }
-        let sl=slot.results[0];
-        let rsl=await getSlots(
-            new SlotUtil.OverlapQuery(sl.startTime,sl.endTime),
+        let sl = slot.results[0];
+        let rsl = await getSlots(
+            new SlotUtil.OverlapQuery(sl.startTime, sl.endTime),
             new SlotUtil.DateQuery(sl.date),
             new SlotUtil.StudentQuery(req.user.email)
-        )
-        if(rsl&&rsl.results&&rsl.results.length>0)
+        );
+        if (rsl && rsl.results && rsl.results.length > 0)
             throw new Error("Slot overlaps :(");
         let success = await addStudentToMeeting(
             req.user.email,
             slot.results[0]._id
         );
-        let s=(success.data != undefined && !success.data[0].error);
-        s&&updateHandler.updateSocket(updateHandler.generateUID(sl.teacher_id,true),"meeting_change",{
-            slot_id:slot.results[0]._id,
-            data:{
-                student_email:req.user.email
-            }
-        });
+        let s = success.data != undefined && !success.data[0].error;
+        s &&
+            updateHandler.updateSocket(
+                updateHandler.generateUID(sl.teacher_id, true),
+                "meeting_change",
+                {
+                    slot_id: slot.results[0]._id,
+                    data: {
+                        student_email: req.user.email,
+                    },
+                }
+            );
         res.json({
-            success:s
+            success: s,
         });
     } catch (err) {
         res.json({ success: false });
@@ -139,13 +156,18 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
             throw new Error("Slot wasn't found");
         }
         let success = await addStudentToMeeting("", slot.results[0]._id);
-        let s=(success.data != undefined && !success.data[0].error);
-        s&&updateHandler.updateSocket(updateHandler.generateUID(slot.results[0].teacher_id,true),"meeting_change",{
-            slot_id:slot.results[0]._id,
-            data:{
-                student_email:""
-            }
-        });
+        let s = success.data != undefined && !success.data[0].error;
+        s &&
+            updateHandler.updateSocket(
+                updateHandler.generateUID(slot.results[0].teacher_id, true),
+                "meeting_change",
+                {
+                    slot_id: slot.results[0]._id,
+                    data: {
+                        student_email: "",
+                    },
+                }
+            );
         res.json({
             success: s,
         });
@@ -153,25 +175,39 @@ router.post("/leave_meeting", studentSlotOnly, async (req: any, res) => {
         res.json({ success: false });
     }
 });
-router.post("/get_teacher_slots",studentOnly,async(req:any,res)=>{
-    try{
-        let teacher_slots=await getSpecialSlots(`SELECT *,
+router.post("/get_teacher_slots", studentOnly, async (req: any, res) => {
+    try {
+        let teacher_slots = await getSpecialSlots(
+            `SELECT *,
         CASE WHEN student_email='' THEN ''
         WHEN student_email=:emailspeciallmao THEN student_email
         ELSE 'occupied'
         END AS student_email
-        FROM "office-hours".slots s `,[{name:"emailspeciallmao",value:req.user.email,type:'string'}],new SlotUtil.TeacherQuery(req.body.teacher))
+        FROM "office-hours".slots s `,
+            [
+                {
+                    name: "emailspeciallmao",
+                    value: req.user.email,
+                    type: "string",
+                },
+            ],
+            new SlotUtil.TeacherQuery(req.body.teacher)
+        );
         //updateHandler.focusStudent(updateHandler.generateUID(req.user.email,false),req.body.teacher);
-        res.json({success:true,slots:teacher_slots.results});
-    }catch(err){res.json({success:false})}
-})
+        res.json({ success: true, slots: teacher_slots.results });
+    } catch (err) {
+        res.json({ success: false });
+    }
+});
 
-router.post("/generate_slots_from_json",teacherOnly,async(req:any,res)=>{
+router.post("/generate_slots_from_json", teacherOnly, async (req: any, res) => {
     console.log(req.body);
     console.log(JSONSlotGenerator.createJSONSlotConfig(req.body));
-    let z=new JSONSlotGenerator(JSONSlotGenerator.createJSONSlotConfig(req.body))
+    let z = new JSONSlotGenerator(
+        JSONSlotGenerator.createJSONSlotConfig(req.body)
+    );
     z.createSlots(req.user._id);
-})
+});
 
 export default router;
 

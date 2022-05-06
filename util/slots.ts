@@ -20,12 +20,8 @@ export function toSQLTime(date: Date) {
 export const canCreateSlot = async (slotData: Slot) => {
     let sl = await getSlots(
         new TeacherQuery(slotData.teacher_id),
-        new OverlapQuery(
-            slotData.startTime,
-            slotData.endTime
-        ), new DateQuery(
-            slotData.date
-        )
+        new OverlapQuery(slotData.startTime, slotData.endTime),
+        new DateQuery(slotData.date)
     );
     return (
         sl.results?.length == 0 &&
@@ -65,12 +61,26 @@ export const createSlot = async (slotData: {
     }
     return { success: false };
 };
-export const createSlots=async(a:{startTime:string,endTime:string,teacher_id:string,date:string}[])=>{
-    let success = await addDocs("slots",a.map(k=>{return {
-        student_email:'',description:'',...k
-    }}));
-    return success.data!=undefined&&!success.data[0].error;
-}
+export const createSlots = async (
+    a: {
+        startTime: string;
+        endTime: string;
+        teacher_id: string;
+        date: string;
+    }[]
+) => {
+    let success = await addDocs(
+        "slots",
+        a.map((k) => {
+            return {
+                student_email: "",
+                description: "",
+                ...k,
+            };
+        })
+    );
+    return success.data != undefined && !success.data[0].error;
+};
 
 export const deleteSlot = async (slot: { _id: string }) => {
     let success = await rmDocs("slots", [{ _id: slot._id }]);
@@ -78,11 +88,11 @@ export const deleteSlot = async (slot: { _id: string }) => {
     return false;
 };
 
-export const deleteSlots = async(slots:{_id:string}[]) => {
-    let success = await rmDocs("slots",slots);
-    if(success.data!=undefined)return success.data[0].error==null
+export const deleteSlots = async (slots: { _id: string }[]) => {
+    let success = await rmDocs("slots", slots);
+    if (success.data != undefined) return success.data[0].error == null;
     return false;
-}
+};
 
 export const getSlotById = (id: string) => {
     return new Promise((resolve, reject) => {
@@ -157,13 +167,10 @@ class MySlotQuery {
             (this.query == "" ? "" : "where " + this.query)
         );
     }
-    construct_my_query(mcq:string){
-        return (
-            mcq +
-            (this.query == "" ? "" : "where " + this.query)
-        );
+    construct_my_query(mcq: string) {
+        return mcq + (this.query == "" ? "" : "where " + this.query);
     }
-    get_special(mqb:string) {
+    get_special(mqb: string) {
         return new Promise<QueryResponse>((resolve, reject) => {
             query(
                 {
@@ -304,7 +311,6 @@ export class OverlapQuery extends MySlotQuery {
     }
 }
 
-
 export class DateTimeRangeQuery extends MySlotQuery {
     constructor(
         date: string | Date,
@@ -372,8 +378,10 @@ export class IDQuery extends MySlotQuery {
 }
 
 export class DateBeforeQuery extends MySlotQuery {
-    constructor(mdate:string){
-        super(`CAST(date as date)<=:mdate`,[{name:"mdate",type:"date",value:mdate}])
+    constructor(mdate: string) {
+        super(`CAST(date as date)<=:mdate`, [
+            { name: "mdate", type: "date", value: mdate },
+        ]);
     }
 }
 
@@ -434,7 +442,11 @@ export const getSlots = (...q: MySlotQuery[]): Promise<QueryResponse> => {
     else return new MySlotQuery("", []).get();
 };
 
-export const getSpecialSlots = (r:string,params:{ name: string; type: string; value: string }[],...q: MySlotQuery[]): Promise<QueryResponse> => {
+export const getSpecialSlots = (
+    r: string,
+    params: { name: string; type: string; value: string }[],
+    ...q: MySlotQuery[]
+): Promise<QueryResponse> => {
     let z = null;
     for (let i = 0; i < q.length; i++) {
         if (i != q.length - 1) {
@@ -446,6 +458,8 @@ export const getSpecialSlots = (r:string,params:{ name: string; type: string; va
         if (z == null) z = q[i] as MySlotQuery;
         else z.add(q[i]);
     }
-    if (z != null){z.parameters=[...z.parameters,...params]; return z.get_special(r+" ")}
-    else return new MySlotQuery("", []).get_special(r+" ");
+    if (z != null) {
+        z.parameters = [...z.parameters, ...params];
+        return z.get_special(r + " ");
+    } else return new MySlotQuery("", []).get_special(r + " ");
 };

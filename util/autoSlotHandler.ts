@@ -56,7 +56,7 @@ export abstract class AutoSlotGenerator {
 export abstract class SafeAutoSlotGenerator extends AutoSlotGenerator {
     async generateSafeSlots(teacher_id: string): Promise<AutoSlot[]> {
         let slots = [] as any[];
-        let currSlot = this.generateSlot()
+        let currSlot = this.generateSlot();
         while (currSlot) {
             slots.push(currSlot);
             currSlot = this.generateSlot();
@@ -72,14 +72,15 @@ export abstract class SafeAutoSlotGenerator extends AutoSlotGenerator {
                 description: description || "",
             };
         });
-        for (let i of slots){
-            let s=await createSlot(i as Slot);
-            s.success&&updateHandler.updateFocus(teacher_id,"new_slot",i);
+        for (let i of slots) {
+            let s = await createSlot(i as Slot);
+            s.success && updateHandler.updateFocus(teacher_id, "new_slot", i);
         }
     }
 }
-interface TimeSlot{
-    startTime:string,endTime:string
+interface TimeSlot {
+    startTime: string;
+    endTime: string;
 }
 interface JSONSlotConfig {
     dates: Map<string, Set<TimeSlot>>;
@@ -100,9 +101,9 @@ export class JSONSlotGenerator extends SafeAutoSlotGenerator {
         super();
         this.cfg = cfg;
         this.dateIter = cfg.dates.entries();
-        let z=this.dateIter.next().value;
-        this.currDate=z[0];
-        this.slotIter=z[1].entries();
+        let z = this.dateIter.next().value;
+        this.currDate = z[0];
+        this.slotIter = z[1].entries();
     }
     generateSlot(): AutoSlot | null {
         let n = this.slotIter.next();
@@ -111,12 +112,12 @@ export class JSONSlotGenerator extends SafeAutoSlotGenerator {
             if (d.done) return null;
             else {
                 this.slotIter = d.value[1].entries();
-                this.currDate=d.value[0];
+                this.currDate = d.value[0];
                 return this.generateSlot();
             }
         } else {
-            let a=n.value[0];
-            return {...a,date:this.currDate};
+            let a = n.value[0];
+            return { ...a, date: this.currDate };
         }
     }
 }

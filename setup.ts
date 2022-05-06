@@ -1,7 +1,7 @@
 import { autoSlotHandler, JSONSlotGenerator } from "./util/autoSlotHandler";
 
-export default ()=>{
-    autoSlotHandler.deleteOldSlots().catch(()=>{})
+export default () => {
+    autoSlotHandler.deleteOldSlots().catch(() => {});
     /*let gen = new JSONSlotGenerator(JSONSlotGenerator.createJSONSlotConfig({
         '2022-05-02':[
             {startTime:'15:00:00',endTime:'15:30:00'},
@@ -14,4 +14,4 @@ export default ()=>{
         ]
     }))
     gen.createSlots('113315261099846298265')*/
-}
+};

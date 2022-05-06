@@ -1,9 +1,6 @@
 import express from "express";
 import { googleUser } from "../types";
-import {
-    grabUserByEmail,
-    login,
-} from "../util/authorizationHandler";
+import { grabUserByEmail, login } from "../util/authorizationHandler";
 import getGoogleUser from "../util/getGoogleUser";
 import showError from "../util/showError";
 import { createTeacher } from "../util/teacher";

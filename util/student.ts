@@ -1,6 +1,4 @@
-import {
-    QueryResponse,
-} from "@rockset/client/dist/codegen/api";
+import { QueryResponse } from "@rockset/client/dist/codegen/api";
 import {
     addDocs,
     query,

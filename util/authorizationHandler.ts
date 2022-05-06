@@ -37,12 +37,13 @@ async function grabTeacherSlots(user: any) {
 
 async function grabStudentSlots(user: any) {
     let slots;
-    try{
-        let results=await getSlots(new StudentQuery(user.email));
-        if(results.results)
-            slots=results.results;
-        else slots=[];
-    } catch(err){slots=[]}
+    try {
+        let results = await getSlots(new StudentQuery(user.email));
+        if (results.results) slots = results.results;
+        else slots = [];
+    } catch (err) {
+        slots = [];
+    }
     user.teacher = false;
     user.slots = slots;
     return user as Student;
@@ -57,12 +58,13 @@ export function login(req: any, res: any, user: any) {
     return res.cookie("jwt", token, { maxAge: 3600000 });
 }
 
-export async function getuserFromJWT(token:string)
-{
-    try{
-        let d=jwt.verify(token,jwtKey);
+export async function getuserFromJWT(token: string) {
+    try {
+        let d = jwt.verify(token, jwtKey);
         return await grabUserByEmail(d.u);
-    }catch(err){return false}
+    } catch (err) {
+        return false;
+    }
 }
 
 export async function teacherSlotOnly(req: any, res: any, n: any) {

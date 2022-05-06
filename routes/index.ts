@@ -4,4 +4,10 @@ import studentRouter from "./student";
 import teacherRouter from "./teacher";
 import updateSocketRouter from "./update";
 
-export { apiRouter, homeRouter, studentRouter, teacherRouter, updateSocketRouter };
+export {
+    apiRouter,
+    homeRouter,
+    studentRouter,
+    teacherRouter,
+    updateSocketRouter,
+};
