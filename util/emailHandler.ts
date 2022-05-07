@@ -1,13 +1,13 @@
 import { Transporter, createTransport } from "nodemailer";
 import { Email } from "../types";
-const cfg = require("../config.json");
 import { renderFile } from "ejs";
+const cfg = require("../config.json");
 
 export class BaseEmailHandler {
     transporter: Transporter;
     constructor() {
         this.transporter = createTransport({
-            port: 465, // true for 465, false for other ports
+            port: 465,
             host: "smtp.gmail.com",
             auth: {
                 user: cfg.emailName,
@@ -20,15 +20,25 @@ export class BaseEmailHandler {
         return await this.transporter.sendMail(e);
     }
 }
+
 export class StudentEmailHandler extends BaseEmailHandler {
-    async cancelSlot(e: string, tn: string, d: string, st: string, et: string) {
+    private static parseTime(time: string): string {
+        let hours = parseInt(time.substring(0, 2));
+        let newHours = (hours + 11) % 12 + 1;
+        var suffix = hours >= 12 ? "PM" : "AM"; 
+        return `${Number(newHours).toString() + time.substring(time.length - 6, time.length - 3)} ${suffix}`;
+    }
+
+    async cancelSlot(student_email: string, name: string, date: string, startTime: string, endTime: string, reason?: string) {
+        startTime = StudentEmailHandler.parseTime(startTime);
+        endTime = StudentEmailHandler.parseTime(endTime);
         renderFile(
             "emails/student/cancellation.ejs",
-            { tn: tn, dn: d, sn: st, en: et },
+            { name: name, date: date, startTime: startTime, endTime: endTime, reason: reason },
             (err, emailBody) => {
                 console.log(err);
-                let sd = new Date(d + "T" + st),
-                    ed = new Date(d + "T" + et),
+                let sd = new Date(date + "T" + startTime),
+                    ed = new Date(date + "T" + endTime),
                     dn = sd.toLocaleString("en-us", {
                         weekday: "long",
                         month: "long",
@@ -42,12 +52,11 @@ export class StudentEmailHandler extends BaseEmailHandler {
                         hour: "numeric",
                         minute: "numeric",
                     });
-                let t = `Your meeting with ${tn} on ${dn} from ${sn} to ${en} has been cancelled.`;
                 this.sendEmail({
                     from: cfg.emailName,
-                    to: e,
-                    subject: "Slot Cancelled",
-                    text: t,
+                    to: student_email,
+                    subject: `Meeting with ${name} Cancelled`,
+                    text: `Your meeting with ${name} on ${dn} from ${sn} to ${en} has been cancelled.`,
                     html: emailBody,
                 });
             }

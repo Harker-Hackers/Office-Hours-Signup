@@ -41,13 +41,13 @@ export abstract class AutoSlotGenerator {
         }
         return slots;
     }
-    createSlots(teacher_id: string, description?: string) {
+    createSlots(teacher_id: string, reason?: string) {
         let slots = this.generateSlots();
         slots = slots.map((k) => {
             return {
                 ...k,
                 teacher_id: teacher_id,
-                description: description || "",
+                reason: reason || "",
             };
         });
         createSlots(slots as Slot[]);
@@ -63,13 +63,13 @@ export abstract class SafeAutoSlotGenerator extends AutoSlotGenerator {
         }
         return slots;
     }
-    async createSlots(teacher_id: string, description?: string) {
+    async createSlots(teacher_id: string, reason?: string) {
         let slots = await this.generateSafeSlots(teacher_id);
         slots = slots.map((k) => {
             return {
                 ...k,
                 teacher_id: teacher_id,
-                description: description || "",
+                reason: reason || "",
             };
         });
         for (let i of slots) {

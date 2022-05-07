@@ -1,7 +1,6 @@
-import { QueryCallback, Slot } from "../types";
+import { Slot } from "../types";
 import { addDocs, editDocs, query, rmDocs } from "../db";
 import {
-    OrgPaymentMethodResponse,
     QueryResponse,
 } from "@rockset/client/dist/codegen/api";
 
@@ -33,14 +32,14 @@ export const createSlot = async (slotData: {
     date?: string;
     startTime?: string;
     endTime?: string;
-    description?: string;
+    reason?: string;
     teacher_id: string;
     student_email?: string;
 }) => {
     slotData.date = slotData.date || toSQLDate(new Date());
     slotData.startTime = slotData.startTime || toSQLTime(new Date());
     slotData.endTime = slotData.endTime || toSQLTime(new Date());
-    slotData.description = slotData.description || "";
+    slotData.reason = slotData.reason || "";
     slotData.student_email = slotData.student_email || "";
     let slot;
     if (await canCreateSlot(slotData as Slot)) {
@@ -48,7 +47,7 @@ export const createSlot = async (slotData: {
             date: slotData.date,
             startTime: slotData.startTime,
             endTime: slotData.endTime,
-            description: slotData.description,
+            reason: slotData.reason,
             teacher_id: slotData.teacher_id,
             student_email: slotData.student_email,
         };
@@ -62,7 +61,7 @@ export const createSlot = async (slotData: {
     return { success: false };
 };
 export const createSlots = async (
-    a: {
+    slots: {
         startTime: string;
         endTime: string;
         teacher_id: string;
@@ -71,10 +70,10 @@ export const createSlots = async (
 ) => {
     let success = await addDocs(
         "slots",
-        a.map((k) => {
+        slots.map((k) => {
             return {
                 student_email: "",
-                description: "",
+                reason: "",
                 ...k,
             };
         })

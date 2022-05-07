@@ -5,7 +5,14 @@
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
     <style>
         form p {
-            display: inline
+            display: inline;
+        }
+        #email-prompt-student-email {
+            color: blue;
+        }
+        #email-prompt-reason {
+            height: 100px;
+            width: 100%;
         }
     </style>
 </head>
@@ -62,13 +69,33 @@
             </form>
             <hr>
             <p id="view-prompt-student-name" class="text-center">No student signed up</p>
-            <p id="meeting-description"></p>
+            <p id="meeting-reason"></p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button id="delete-btn" type="button" class="btn btn-danger">Delete</button>
         </div>
-    <%- include(`${base}/views/partials/modal/close.ejs`) %>    
+    <%- include(`${base}/views/partials/modal/close.ejs`) %>   
+    
+    <%- include(`${base}/views/partials/modal/open.ejs`, { id: "email-prompt-popup" }) %>
+        <div class="modal-header">
+            <h5 class="w-100 text-center modal-title" id="view-prompt-popup-label">Notify Students</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <p>Would you like to state the reason for cancellation to 
+                <span id="email-prompt-student-email"></span>?
+            </p>
+            <form>
+                <textarea id="email-prompt-reason" placeholder="Reason for cancellation (leave empty for none)."></textarea>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button id="email-delete-btn" type="button" class="btn btn-danger">Delete</button>
+        </div>
+    <%- include(`${base}/views/partials/modal/close.ejs`) %>   
+
     <%- include(`${base}/views/partials/footer.ejs`, { classList: ["bg-dark"] }) %>
     <script>
         const DEFAULT_SLOT_COLOR="#3A5AFF";
@@ -110,13 +137,12 @@
             elems=elems.map(k=>{let bb=k.getBoundingClientRect();return {name:k.childNodes[0].textContent,start:bb.top,end:bb.bottom,col:bb.left,elems:new Map([[uid++,k]])}})
             for(let i=0;i<elems.length;i++)
             {
-                for(let j=i+1;j<elems.length;j++)
+                for(let j=i+1; j < elems.length; j++)
                 {
                     let ev1=elems[i],ev2=elems[j];
                     if(isEventColliding(ev1,ev2)){
-                        elems[i]=mergeEventContainers(ev1,ev2);
-                        console.log(elems[i]);
-                        j<elems.length-1?elems[j]=elems.pop():elems.pop();
+                        elems[i] = mergeEventContainers(ev1,ev2);
+                        j < elems.length-1?elems[j]=elems.pop():elems.pop();
                         j--;
                     }
                 }
@@ -140,26 +166,24 @@
                     groups.push({start:v.getBoundingClientRect().top,end:v.getBoundingClientRect().bottom,elems:[v]})
                 })
                 let iter=0;
-                groups.forEach(g=>{
+                groups.forEach(g => {
                     g.elems.forEach(e=>{
                         e.dataset.totcols=groups.length;
                         e.dataset.mycol=iter;
                     })
                     iter++;
-                })
-            })
+                });
+            });
             return elems;
         }
-        function splitAndShiftEvents(){
+        function splitAndShiftEvents() {
             elems=[...document.querySelectorAll(".fc-bg-event")];
-            elems.forEach(k=>unshiftEvent(k));
-            let evls=splitEvent(elems);
-            evls.forEach(evl=>{
-                if(evl.elems.size>1)
-                {
-                    let col=0;
-                    evl.elems.forEach((v,k)=>{
-                        //console.log(v.dataset.totcols+" "+v.dataset.mycol);
+            elems.forEach(k => unshiftEvent(k));
+            let evls = splitEvent(elems);
+            evls.forEach(evl => {
+                if(evl.elems.size>1) {
+                    let col = 0;
+                    evl.elems.forEach((v, k)=>{s
                         shiftEventElement(v,parseInt(v.dataset.totcols),parseInt(v.dataset.mycol));
                     })
                 }
@@ -185,7 +209,7 @@
             return null;
         }
         async function getDaySchedule(d){
-            let r = await fetch("https://bell.dev.harker.org/api/schedule?"+new URLSearchParams({month:d.getMonth()+1,year:d.getFullYear(),day:d.getDate()}), {
+            let r = await fetch("https://bell.dev.harker.org/api/schedule?"+ new URLSearchParams({month:d.getMonth()+1,year:d.getFullYear(),day:d.getDate()}), {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
@@ -236,7 +260,10 @@
                         "Accept":"application/json",
                         "Content-Type":"application/json"
                     },
-                    body: JSON.stringify({id: id})
+                    body: JSON.stringify({
+                        id: id, 
+                        reason: $("#email-prompt-reason").val()
+                    })
                 });
                 let success = await r.json()
                 if(success.success) {
@@ -244,14 +271,14 @@
                 } else {
                     throw new Error("An error occured.");
                 }
-            } catch(err){
+            } catch(err) {
                 ev.setProp("backgroundColor", DEFAULT_SLOT_COLOR);
                 ev.setProp("borderColor", DEFAULT_SLOT_COLOR);
                 return;
             }
         }
         function createSlotEvent(slot) {
-            let col=slot.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR
+            let col = slot.student_email ? BOOKED_SLOT_COLOR : DEFAULT_SLOT_COLOR;
             return calendar.addEvent({start: slot.date + "T" + slot.startTime, end: slot.date + "T" + slot.endTime,
                 title: "Meeting", 
                 slot_id: slot._id,
@@ -352,16 +379,16 @@
                     $("#view-prompt-start-input").val(info.event.extendedProps.data.startTime);
                     $("#view-prompt-end-input").val(info.event.extendedProps.data.endTime);
                     $("#view-prompt-student-name").html(info.event.extendedProps.data.student_email ? `<b>Attendee</b>: ${info.event.extendedProps.data.student_email}` : "No student signed up");
-                    $("#meeting-description").html(info.event.extendedProps.data.description ? `<b>Description</b>: ${info.event.extendedProps.data.description}` : "");
+                    $("#meeting-reason").html(info.event.extendedProps.data.reason ? `<b>Reason</b>: ${info.event.extendedProps.data.reason}` : "");
                     $("#view-prompt-popup").modal("show");
                 },
-                eventMouseEnter: (info)=>{
-                    let ev=info.event;
-                    let elem=info.el;
+                eventMouseEnter: (info) => {
+                    let ev = info.event;
+                    let elem = info.el;
                     if(ev.extendedProps.popup){
-                        let offset=elem.getBoundingClientRect();
+                        let offset = elem.getBoundingClientRect();
                         let tooltip = document.createElement("div");
-                        tooltip.id="bgevent_tooltip_"+ev.extendedProps.name;
+                        tooltip.id="bgevent_tooltip_" + ev.extendedProps.name;
                         tooltip.className="bgevent_tooltip"
                         tooltip.style.top=offset.top+scrollY-40+"px";
                         tooltip.style.left=offset.left+scrollX+"px";
@@ -372,11 +399,11 @@
                         document.body.appendChild(tooltip);
                     }
                 },
-                eventMouseLeave: (info)=>{
-                    let ev=info.event;
+                eventMouseLeave: (info) => {
+                    let ev = info.event;
                     try{
-                        document.getElementById("bgevent_tooltip_"+ev.extendedProps.name).remove();
-                    }catch(err){}
+                        document.getElementById("bgevent_tooltip_" + ev.extendedProps.name).remove();
+                    } catch(err){}
                 },
                 dateClick: (info) => {
                     window.info = info;
@@ -388,8 +415,7 @@
                     console.log(r);
                     if(!(r.view.type=='timeGridDay'||r.view.type=='timeGridWeek'))
                         return;
-                    for(let d=r.start;d<r.end;d.setDate(d.getDate()+1))
-                    {
+                    for(let d=r.start;d<r.end;d.setDate(d.getDate()+1)) {
                         createBackgroundEventsForDay(d)
                     }
                 },
@@ -424,13 +450,25 @@
         });
 
         document.getElementById("delete-btn").addEventListener("click", () => {
-            info = window.info;
+            let info = window.info;
             $("#view-prompt-popup").modal("hide");
-            deleteSlot(info.event.extendedProps.slot_id, info.event);
+            if (info.event.extendedProps.data.student_email) {
+                $("#email-prompt-student-email").html(info.event.extendedProps.data.student_email);
+                $("#email-prompt-popup").modal("show");
+            }
         });
+
+        $("#email-delete-btn").bind(
+            "click", 
+            () => {
+                deleteSlot(window.info.event.extendedProps.slot_id, info.event);
+                $("#email-prompt-popup").modal("hide");
+            }
+        );
+
         const socket = io("/update");
         socket.on("connect",()=>{
-            socket.emit('auth',readCookie("jwt"));
+            socket.emit("auth",readCookie("jwt"));
             socket.on("meeting_change",function(d){
                 updateSlotEvent(d.slot_id,d.data)
             });

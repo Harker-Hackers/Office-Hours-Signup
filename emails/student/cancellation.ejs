@@ -1,10 +1,17 @@
 <p style='font-size:2em;'>
     Your meeting with
-    <b style='color:rgb(110,200,40);'><%- tn %></b>
+    <b style='color:rgb(110,200,40);'><%- name %></b>
     on
-    <b style='color:rgb(40, 200, 110);'><%- dn %></b>
-    from <b style='color:rgb(80,80,140)'><%- sn %></b>
+    <b style='color:rgb(40, 200, 110);'><%- date %></b>
+    from <b style='color:rgb(80,80,140)'><%- startTime %></b>
     to
-    <b style='color:rgb(80,80,140)'><%- en %></b>
+    <b style='color:rgb(80,80,140)'><%- endTime %></b>
     has been cancelled.
+    <% if (reason) { %>
+        <hr>
+        <b>Reason for cancellation:</b><br>
+        <blockquote>
+            <%- reason %>
+        </blockquote>
+    <% } %>
 </p>

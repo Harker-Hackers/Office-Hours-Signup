@@ -9,7 +9,7 @@ export interface googleUser {
     azp?: string;
     name?: string;
     picture?: string;
-    given_name?: string;
+    given_name?: string; // snake case because of API
     family_name?: string;
 }
 
@@ -47,7 +47,7 @@ export interface Slot extends DatabaseItem {
     date: string;
     startTime: string;
     endTime: string;
-    description: string;
+    reason: string;
     teacher_id: string;
     student_email: string;
 }
