@@ -455,6 +455,8 @@
             if (info.event.extendedProps.data.student_email) {
                 $("#email-prompt-student-email").html(info.event.extendedProps.data.student_email);
                 $("#email-prompt-popup").modal("show");
+            } else {
+                deleteSlot(info.event.extendedProps.slot_id, info.event);
             }
         });
 
