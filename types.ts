@@ -1,4 +1,5 @@
 import { QueryResponse } from "@rockset/client/dist/codegen/api";
+import { Request, Response } from "express";
 
 export interface googleUser {
     iss: string;
@@ -64,3 +65,5 @@ export interface Email {
 }
 
 export type QueryCallback = (value: QueryResponse) => void;
+export type Req = Request<{}, any, any, Record<string, any>>;
+export type Res = Response<any, Record<string, any>>;
