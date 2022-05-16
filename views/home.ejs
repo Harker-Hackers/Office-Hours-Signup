@@ -1,44 +1,79 @@
-<title>Office Hours Signup</title>
-<style>
-    #error {
-        color: red;
-    }
-</style>
-
+<head>
+    <%- include(`${base}/views/partials/head.ejs`) %>
+</head>
 <body>
-    <p>Login with Google</p>
-    <div id="g_id_onload"
-        data-client_id="582829001790-6u1eiea25r6g998jrn6gg2ocmj8jnb0m.apps.googleusercontent.com"
-        data-login_uri="/user"
-        data-auto_prompt="false">
+    <div class="ms-4 me-4 mt-5">
+        <div class="text-center">
+            <h1 class="text-center display-5">Office Hours Management System</h1>
+            <small class="text-muted">The Harker School</small>
+        </div>
+        <div class="ms-5 me-5 mt-4">
+            <p>
+                Built and maintained by Harker students, this app aims to solve all our school's problems with office hours. 
+                Most teachers don't have implemented an efficient system for students to reserve meetings with them. 
+                Everyone's time gets wasted and questions go unanswered. 
+                We are building the <b>Harker Office Hours Management System</b> to solve this problem once and for all. 
+            </p>
+            <div class="mt-4 ms-5">
+                <h3>Convenience for teachers</h3>
+                <div class="row">
+                    <div class="col">
+                        Managing time and students has never been easier.
+                        Most teachers don't have a way for students to sign up for appointments.
+                        This causes chaos in the classroom during office hours. 
+                        The teachers that do use a system for this have to input times manually.
+                        Teachers can now create, edit, and cancel meeting slots in seconds. 
+                        Customizable automation makes being a teacher even easier.
+                        
+                        <p class="mt-3">
+                            <ul>
+                                <li>Organized calendar view</li>
+                                <li>Optional slot automatic creation</li>
+                                <li>View reason for student meeting before time</li>
+                                <li>Set rules for meeting frequency</li>
+                                <li>Google Calendar integration</li>
+                                <li>Recieve email notifications</li>
+                                <li>Notify students of cancellations with messages</li>
+                            </ul>
+                        </p>
+                    </div>
+                    <div class="col text-center">
+                        <img class="rounded" src="/static/img/teacherCalendar.png">
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col ms-5">
+                        <img class="rounded" src="/static/img/studentMeeting.png">
+                    </div>
+                    <div class="col mt-2">
+                        <h3 class="text-right">Ease for students</h3>
+                        <p>
+                            Students will have a standardized method to view and sign up for office hours slots across classes.
+                            Being students, we understand the problems that need to be addressed in terms of office hours management.
+                            Being able to see all slots and meetings in an organized fashion makes life incredibly easy. 
+                            They can view each of their teachers' availability and reserve time with them in just moments. 
+                            Using our app, they can convey the purpose of their meetings to their teachers beforehand, improving teacher-student communication.
+                        </p>
+                        <p class="mt-3">
+                            <ul>
+                                <li>Organized calendar view</li>
+                                <li>View availability by teacher</li>
+                                <li>Communicate reason for meeting during signup</li>
+                                <li>Google Calendar integration</li>
+                                <li>Recieve email notifications</li>
+                            </ul>
+                        </p>
+                    </div>
+                </div>
+                <p class="mt-4">
+                    <!--Ready to get started? Click <a href="/login">here</a> to begin your journey. 
+                    Read through our <a href="/help/teacher">teacher guide</a> for guidance.
+                    -->
+                    Our app is releasing in the 2022-23 school year. 
+                    Please email <a class="text-reset" href="mailto:harker.hackers@gmail.com">harker.hackers@gmail.com</a> for more information.
+                </p>
+            </div>
+        </div>
     </div>
-    <div class="g_id_signin"
-        data-type="standard"
-        data-size="large"
-        data-theme="outline"
-        data-text="sign_in_with"
-        data-shape="rectangular"
-        data-logo_alignment="left">
-    </div>
-    <p id="error"><% if (typeof error == "string") { %>
-        <%- error %> |
-    <% } %></p>
-
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script>
-    function handleCredentialResponse(response) {
-        console.log(`Encoded JWT ID token: ${response.credential}`);
-    }
-    window.onload = () => {
-        google.accounts.id.initialize({
-            client_id: "582829001790-6u1eiea25r6g998jrn6gg2ocmj8jnb0m.apps.googleusercontent.com",
-            callback: handleCredentialResponse
-        });
-        google.accounts.id.renderButton(
-            document.getElementById("buttonDiv"),
-            { theme: "outline", size: "large" }
-        );
-        google.accounts.id.prompt();
-    }
-    </script>
+    <%- include(`${base}/views/partials/footer.ejs`) %>
 </body>
