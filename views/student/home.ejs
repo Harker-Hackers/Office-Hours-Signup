@@ -1,5 +1,232 @@
-<%- include(`${base}/views/partials/head.ejs`) %>
-<body>
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Portal" }) %>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css' rel='stylesheet' />
+</head>
+<body class="ms-4 me-4">
     <h1>Student Home</h1>
-    <p>Welcome, <%- name %></p>
+    <input id="addteacher"></input>
+    <button onclick="addTeachers([document.getElementById('addteacher').value])">Add teacher (put id above)</button>
+    <ul>
+        <% for(let i in teachers){%>
+            <li onclick="confirm('Do you want to delete this teacher?')&&deleteTeachers(['<%- i %>'])"><a href="#" onclick=""><%- teachers[i] %></a></li>
+        <% } %>
+    </ul>
+    <select name="teachers" id="tsc_selection" onchange="loadAndShowTeacherSlots(this.value,true)">
+        <option value="" disabled selected>Select a teacher</option>
+        <% for(let i in teachers){%>
+            <option value="<%- i %>"><%- teachers[i] %></option>
+        <% } %>
+    </select>
+    <p>Enter Teacher ID to view</p>
+    <input id="viewteacherslots"></input>
+    <button onclick="clearTemp();loadAndShowTeacherSlots(document.getElementById('viewteacherslots').value)">View Other Slots</button>
+    <div id='calendar'></div>
+    <script>
+        const DEFAULT_SLOT_COLOR="#3A5AFF";
+        const REMOVE_SLOT_COLOR="#FFADAD";
+        const CREATE_SLOT_COLOR="#DDDDDD";
+        const BOOKED_SLOT_COLOR="#00E304";
+        let currteacher="";
+        let allslots=<%- JSON.stringify(slots) %>;
+        let slots=new Map(allslots.map(i => [i._id, i]));
+        let teachers=<%- JSON.stringify(teachers) %>;
+        const email="<%- email %>";
+        async function addTeachers(teachers){
+            try{
+                let r=await fetch("/api/add_teachers", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"teachers":teachers})
+                })
+                let success=await r.json();
+            } catch(err) {
+                console.log(err);//ev.remove();
+            }
+        }
+        async function setTeachers(teacher_ids){
+            try{
+                let r=await fetch("/api/change_teachers", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"teachers":teacher_ids})
+                })
+                let success=await r.json();
+            } catch(err) {
+            }
+        }
+        async function deleteTeachers(teacher_ids){try{
+                let r=await fetch("/api/delete_teachers",{method:"POST",headers:{"Accept": "application/json","Content-Type": "application/json"},body:JSON.stringify({
+                    "teachers":teacher_ids
+                })});
+                let success=await r.json();
+            }catch(err){}
+        }
+        async function getTeacherSlots(teacher_id){try{
+                let r=await fetch("/api/get_teacher_slots",{method:"POST",headers:{"Accept": "application/json","Content-Type": "application/json"},body:JSON.stringify({
+                    "teacher":teacher_id
+                })});
+                let success=await r.json();
+                return success;
+            }catch(err){return {success:false}}
+        }
+        function showSlots(teacher_id,temp)
+        {
+            let ids=[];
+            currteacher=teacher_id;
+            calendar.getEvents().forEach((ev)=>{
+                redisplayEvent(ev);
+            })
+        }
+        function clearTemp()
+        {
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.data.temp)
+                    ev.remove();
+            })
+        }
+        function deleteTempSlot(sl_id){
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.slot_id==sl_id&&ev.extendedProps.data.temp)ev.remove();
+            })
+        }
+        function deleteMeeting(sl_id){
+            calendar.getEvents().forEach((ev)=>{
+                if(ev.extendedProps.slot_id==sl_id&&!ev.extendedProps.data.temp)ev.remove();
+            })
+        }
+        async function loadTeacherSlots(teachid)
+        {
+            let slt=await getTeacherSlots(teachid);
+            let ev=calendar.getEvents();
+            (slt.success)&&slt.slots.forEach(k=>{
+                (k.student_email!==email)&&(!ev.some(r=>r.extendedProps.slot_id==k._id))&&(createSlotEvent(k,true,{temp:true}));
+            });
+        }
+        async function loadAndShowTeacherSlots(teachid)
+        {
+            clearTemp();
+            try{socket.emit("focus",teachid)}catch(err){}
+            await loadTeacherSlots(teachid);
+            showSlots(teachid);
+        }
+        async function signMeeting(ev)
+        {
+            try {
+                ev.setProp("backgroundColor",BOOKED_SLOT_COLOR);ev.setProp("borderColor",BOOKED_SLOT_COLOR)
+                let r = await fetch("/api/join_meeting", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"id":ev.extendedProps.slot_id})
+                })
+                let success=await r.json();
+                if(success.success)
+                {
+                    updateEvent(ev,{"student_email":email,"temp":false});
+                    redisplayEvent(ev);
+                }
+                else
+                    throw new Error()
+            } catch(err){ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR)}
+        }
+        function updateEvent(ev,d){
+            ev.setExtendedProp("data",{...ev.extendedProps.data,...d});
+        }
+        function redisplayEvent(ev){
+            let d=ev.extendedProps.data;
+            if((d.teacher_id==currteacher||(d.student_email==email)))
+                ev.setProp("display","block");
+            else
+                ev.setProp("display","none")
+            let col=d.student_email==email?BOOKED_SLOT_COLOR:(d.student_email==''?DEFAULT_SLOT_COLOR:CREATE_SLOT_COLOR);
+            ev.setProp('backgroundColor',col);
+            ev.setProp('borderColor',col);
+        }
+        async function cancelMeeting(ev)
+        {
+            try{
+                ev.setProp("backgroundColor",DEFAULT_SLOT_COLOR);ev.setProp("borderColor",DEFAULT_SLOT_COLOR)
+                let r = await fetch("/api/leave_meeting", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({"id":ev.extendedProps.slot_id})
+                })
+                let success=await r.json();
+                if(success)
+                {
+                    updateEvent(ev,{"student_email":"",temp:true});
+                    redisplayEvent(ev);
+                }
+                else
+                    throw new Error();
+            } catch(err){console.log(err);ev.setProp("backgroundColor",BOOKED_SLOT_COLOR);ev.setProp("borderColor",BOOKED_SLOT_COLOR)}
+        }
+        function createSlotEvent(slot,z,options)
+        {
+            options=!!options?options:{}
+            let col=slot.student_email?BOOKED_SLOT_COLOR:DEFAULT_SLOT_COLOR
+            calendar.addEvent({start:slot.date+"T"+slot.startTime,end:slot.date+"T"+slot.endTime,
+                title:"Meeting",data:{...slot,...options},
+                backgroundColor:(col),borderColor:col,
+                display:z?"block":"none",
+                slot_id:slot._id
+            });
+        }
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            window.calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                eventClick: (info) => {
+                    let ev=info.event;
+                    if(ev.extendedProps.data.student_email=="")
+                        confirm("Do you want to sign up for this meeting?")&&signMeeting(info.event);
+                    else if (ev.extendedProps.data.student_email==email)
+                        confirm("Do you want to cancel this meeting?")&&cancelMeeting(info.event);
+                    else
+                        prompt("This meeting is booked by someone else.")
+                }
+            });
+            slots.forEach((v,k)=>{createSlotEvent(v,true)})
+            calendar.render();
+        });
+        const socket = io("/update");
+        socket.on("connect",()=>{
+            socket.emit('auth',readCookie("jwt"));
+            socket.on("new_slot",function(d){
+                createSlotEvent(d,true,{temp:true});
+            });
+            socket.on("del_slot",function(d){
+                deleteTempSlot(d);
+            })
+            socket.on("del_meeting",function(d){deleteMeeting(d);alert("A Teacher has deleted one of your meetings.")})
+        })
+    </script>
 </body>

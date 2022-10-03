@@ -1,4 +1,7 @@
 {
     "googleClientId": "",
-    "rocksetApiKey": ""
+    "rocksetApiKey": "",
+    "jwtKey":"",
+    "emailName":"",
+    "emailPass":""
 }

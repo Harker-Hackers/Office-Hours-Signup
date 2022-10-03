@@ -1,0 +1,45 @@
+<head>
+    <%- include(`${base}/views/partials/head.ejs`, { title: "Login" }) %>
+    <style>
+        #error { color: red; }
+    </style>
+</head>
+<body class="ms-4 me-4">
+    <%- include(`${base}/views/partials/homeTopBar.ejs`, { logo: false, active: "login" }) %>
+    <div id="g_id_onload"
+        data-client_id="582829001790-6u1eiea25r6g998jrn6gg2ocmj8jnb0m.apps.googleusercontent.com"
+        data-login_uri="/login"
+        data-auto_prompt="false">
+    </div>
+    <center>
+        <div class="card text-center" style="width: 18rem;">
+            <h3 class="mt-4">Please sign in with Google</h3>
+            <div class="card-body">
+                <div class="g_id_signin"
+                    data-type="standard"
+                    data-theme="outline"
+                    data-text="sign_in_with"
+                    data-width="20rem"
+                    data-logo_alignment="left">
+                </div>
+            </div>
+        </div>
+        <p id="error">
+        <% if (typeof error == "string") { %>
+            <%- error %>
+        <% } %></p>
+    </center>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+    (async () => {
+        let req = await fetch("/api/get_user", {
+            method: "GET",
+        });
+        let res = await req.json();
+        if(res._id) {
+            window.location.replace(`/${res.role}`);
+        }
+    })()
+    </script>
+</body>
